@@ -1,0 +1,25 @@
+# Obsidian workspace state (config OK, cache/workspace tidak perlu)
+.obsidian/workspace*
+.obsidian/cache
+.obsidian/plugins/*/data.json
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Sensitive
+.env
+.env.*
+*.key
+*.pem
+07-SYSTEM/secrets/
+
+# Tutorial screenshots (besar, sudah ada di laptop)
+09-DOCS/*.jpeg
+09-DOCS/*.jpg
+09-DOCS/*.png
+
+# Logs
+*.log
+node_modules/
