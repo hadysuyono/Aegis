@@ -42,3 +42,20 @@ export const readJSON = async (path, fallback = {}) => {
 
 export const writeJSON = async (path, obj, message) =>
   writeFile(path, JSON.stringify(obj, null, 2) + "\n", message);
+
+export const listFolder = async (path) => {
+  try {
+    const res = await gh.repos.getContent({
+      owner: GITHUB_OWNER, repo: GITHUB_REPO, path, ref: GITHUB_BRANCH,
+    });
+    return Array.isArray(res.data) ? res.data : [];
+  } catch (err) {
+    if (err.status === 404) return [];
+    throw err;
+  }
+};
+
+export const readText = async (path) => {
+  const f = await getFile(path);
+  return f ? f.content : null;
+};

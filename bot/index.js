@@ -3,7 +3,7 @@
 //            GITHUB_TOKEN, GITHUB_OWNER, GITHUB_REPO, GROQ_API_KEY
 
 import { Telegraf } from "telegraf";
-import { writeFile } from "./lib/store.js";
+import { writeFile, listFolder, readText } from "./lib/store.js";
 import { analyze } from "./lib/groq.js";
 import { addReminder, dueReminders, markNotified, listActive, removeReminder } from "./lib/reminders.js";
 import { answerSchedule } from "./lib/query.js";
@@ -59,6 +59,41 @@ bot.command("list", async (ctx) => {
     await ctx.reply(`📋 Pengingat aktif (${items.length}):\n\n${lines.join("\n\n")}`);
   } catch (err) {
     await ctx.reply(`❌ Gagal: ${err.message}`);
+  }
+});
+
+// Extract isi pesan dari file inbox (skip frontmatter)
+const extractBody = (md) => {
+  const m = md.match(/^---[\s\S]*?---\s*([\s\S]*)$/);
+  return (m ? m[1] : md).trim();
+};
+
+bot.command("scan", async (ctx) => {
+  await ctx.reply("🔍 Scan inbox... tunggu sebentar.");
+  try {
+    const files = (await listFolder("00-INBOX")).filter(f => f.name.endsWith(".md"));
+    if (files.length === 0) return ctx.reply("📭 Inbox kosong.");
+    let found = 0;
+    const summary = [];
+    for (const f of files) {
+      const content = await readText(`00-INBOX/${f.name}`);
+      if (!content) continue;
+      const body = extractBody(content);
+      if (!body) continue;
+      const a = await analyze(body);
+      if (a.has_schedule && a.datetime_iso && a.event) {
+        const { id, friendly } = await addReminder({
+          datetime_iso: a.datetime_iso, event: a.event, source: body,
+        });
+        found++;
+        summary.push(`• ${a.event} — ${friendly} (${id})`);
+      }
+    }
+    if (found === 0) return ctx.reply(`✅ Scan ${files.length} catatan. Tidak ada jadwal terdeteksi.`);
+    await ctx.reply(`✅ Scan ${files.length} catatan.\n🎯 ${found} jadwal ditemukan & disimpan:\n\n${summary.join("\n")}`);
+  } catch (err) {
+    console.error("scan error:", err);
+    await ctx.reply(`❌ Gagal scan: ${err.message}`);
   }
 });
 
