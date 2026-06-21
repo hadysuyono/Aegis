@@ -231,9 +231,9 @@ bot.on("text", async (ctx) => {
       return;
     }
 
-    // 2. Test/noise → archive silent (tidak balas)
+    // 2. Test/noise → buang (tidak disimpan sama sekali, silent)
     if (a.category === "test" || a.category === "noise" || a.importance === "P3") {
-      await saveToFile("06-ARCHIVE/test", text, { importance: a.importance, category: a.category, reason: a.reason });
+      console.log(`[noise drop] "${text.slice(0, 60)}" → ${a.category}/${a.importance}`);
       return;
     }
 
