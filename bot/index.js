@@ -386,7 +386,24 @@ const reflectLoop = async () => {
 setInterval(reflectLoop, 60_000);
 
 bot.catch((err) => console.error("Bot error:", err));
-bot.launch().then(() => console.log("Aegis bot v0.3 running"));
+bot.launch().then(async () => {
+  console.log("Aegis bot v0.4 running");
+  // Auto-distill setelah startup (proses sisa inbox lama, max 1x per deploy)
+  setTimeout(async () => {
+    try {
+      const res = await distill();
+      if (res.processed > 0) {
+        console.log(`[startup distill] ${res.processed} files processed`);
+        const t = res.totals;
+        await bot.telegram.sendMessage(
+          OWNER_ID,
+          `🚀 Bot baru jalan, sekalian rapikan inbox.\n📥 ${res.processed} catatan diproses & dipindah ke 06-ARCHIVE/inbox/${nowJakarta().date.slice(0,7)}/\n` +
+          `🧠 owner +${t.owner||0} • orang +${t.people||0} • project +${t.projects||0} • event +${t.events||0} • keputusan +${t.decisions||0} • belief +${t.beliefs||0}`
+        );
+      }
+    } catch (err) { console.error("startup distill error:", err.message); }
+  }, 8_000);
+});
 
 process.once("SIGINT", () => bot.stop("SIGINT"));
 process.once("SIGTERM", () => bot.stop("SIGTERM"));
