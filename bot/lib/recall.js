@@ -6,6 +6,7 @@ import { listActive } from "./reminders.js";
 import { nowJakarta, formatFriendly } from "./time.js";
 
 const MEM = {
+  owner: "07-SYSTEM/memory/owner.json",
   people: "07-SYSTEM/memory/people.json",
   projects: "07-SYSTEM/memory/projects.json",
   events: "07-SYSTEM/memory/events.json",
@@ -34,7 +35,8 @@ const tokenize = (q) => (q || "")
 export const answerCatatan = async (question) => {
   const today = nowJakarta();
 
-  const [peopleDoc, projDoc, eventDoc, decDoc, belDoc, reminders] = await Promise.all([
+  const [ownerDoc, peopleDoc, projDoc, eventDoc, decDoc, belDoc, reminders] = await Promise.all([
+    readJSON(MEM.owner, { name: null, role: null, businesses: [], context_facts: [] }),
     readJSON(MEM.people, { people: [] }),
     readJSON(MEM.projects, { projects: [] }),
     readJSON(MEM.events, { events: [] }),
@@ -46,6 +48,10 @@ export const answerCatatan = async (question) => {
   const keywords = tokenize(question);
 
   const ctx = {
+    profil_hady: {
+      name: ownerDoc.name, role: ownerDoc.role,
+      businesses: ownerDoc.businesses || [], facts: ownerDoc.context_facts || [],
+    },
     people: filterByKeywords(peopleDoc.people, keywords, ["name", "role", "context", "notes", "aliases"]),
     projects: filterByKeywords(projDoc.projects, keywords, ["name", "notes", "status"]),
     events: filterByKeywords(eventDoc.events, keywords, ["event", "involves", "project"]),
@@ -56,7 +62,10 @@ export const answerCatatan = async (question) => {
     })),
   };
 
-  const isEmpty = Object.values(ctx).every(arr => arr.length === 0);
+  const hasProfil = ctx.profil_hady.name || (ctx.profil_hady.businesses || []).length > 0 || (ctx.profil_hady.facts || []).length > 0;
+  const hasOther = ["people","projects","events","decisions","beliefs","reminders_aktif"]
+    .some(k => Array.isArray(ctx[k]) && ctx[k].length > 0);
+  const isEmpty = !hasProfil && !hasOther;
 
   const prompt = `Kamu Aegis — asisten pribadi Hady. Hari ini ${today.iso}.
 

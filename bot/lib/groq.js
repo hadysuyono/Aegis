@@ -72,18 +72,20 @@ export const extract = async (text) => {
 
 Output STRICT JSON, tanpa code fence. Schema:
 {
-  "people": [{"name": "Nama", "role": "peran singkat", "context": "kaitan dengan Hady", "notes": ["catatan singkat"]}],
-  "projects": [{"name": "Nama project", "status": "aktif|jeda|selesai", "notes": ["catatan"]}],
+  "owner_profile": {"name": "Nama Hady kalau disebut", "role": "peran/profesi Hady", "businesses": ["nama bisnis Hady"], "facts": ["fakta tentang Hady"]},
+  "people": [{"name": "Nama orang LAIN", "role": "peran singkat", "context": "kaitan dgn Hady", "notes": ["catatan"]}],
+  "projects": [{"name": "Nama project/bisnis", "status": "aktif|jeda|selesai", "notes": ["catatan"]}],
   "events": [{"datetime_iso": "YYYY-MM-DDTHH:mm:ss+07:00", "event": "ringkas 3-8 kata", "involves": ["nama"], "project": "nama atau null"}],
   "decisions": [{"decision": "apa yg diputuskan", "reason": "alasan singkat"}],
   "beliefs": [{"belief": "prinsip yg Hady yakini"}]
 }
 
 Aturan:
-- Kalau tidak ada entitas → array kosong []
+- Kalau kategori kosong → field array kosong [] atau object dengan field null
 - Jangan force — kalau tidak yakin, skip
-- Nama orang harus eksplisit. Jangan ada "Bapak Hady"
-- Project = topik kerja besar
+- owner_profile: HANYA kalau pesan berisi info tentang DIRI HADY SENDIRI ("saya owner X", "saya Hady", "bisnis saya Y"). Kalau tidak, semua field null/[].
+- people: orang LAIN yang Hady sebut. JANGAN masukkan Hady sendiri.
+- Project = topik kerja besar / bisnis (mis. reguler-fleet, bajaj, dll)
 - Event butuh tanggal/waktu eksplisit
 - Decision butuh kata "saya pilih/putuskan/akan/mau"
 - Belief = pernyataan prinsip ("Saya percaya...", "Yang penting...")
@@ -93,6 +95,7 @@ Catatan: """${text}"""`;
   const { content } = await aiCall("analyze", { prompt, temperature: 0.1, max_tokens: 800, json: true });
   const p = safeJSON(content, {});
   return {
+    owner_profile: p.owner_profile && typeof p.owner_profile === "object" ? p.owner_profile : null,
     people: Array.isArray(p.people) ? p.people : [],
     projects: Array.isArray(p.projects) ? p.projects : [],
     events: Array.isArray(p.events) ? p.events : [],

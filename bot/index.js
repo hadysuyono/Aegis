@@ -7,7 +7,7 @@ import { writeFile, listFolder, readText } from "./lib/store.js";
 import { analyze } from "./lib/groq.js";
 import { addReminder, dueReminders, markNotified, listActive, removeReminder } from "./lib/reminders.js";
 import { answerSchedule } from "./lib/query.js";
-import { distill } from "./lib/distill.js";
+import { distill, distillText } from "./lib/distill.js";
 import { answerCatatan } from "./lib/recall.js";
 import { weeklyReflect } from "./lib/reflect.js";
 import { recordFeedback, summary as feedbackSummary } from "./lib/feedback.js";
@@ -253,8 +253,10 @@ bot.on("text", async (ctx) => {
       );
     }
 
-    // 4. Penting tapi tanpa jadwal → simpan ke inbox silent
-    await saveToFile("00-INBOX", text, { importance: a.importance, category: a.category });
+    // 4. Penting tapi tanpa jadwal → simpan ke inbox + langsung distill (memory real-time)
+    const inboxPath = await saveToFile("00-INBOX", text, { importance: a.importance, category: a.category });
+    distillText(text, inboxPath.split("/").pop())
+      .catch(e => console.error("inline distill error:", e.message));
     return;
   } catch (err) {
     console.error("handle text error:", err);
