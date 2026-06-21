@@ -13,13 +13,21 @@ Analisis pesan dari Hady. Output STRICT JSON, tanpa code fence, tanpa penjelasan
 
 Schema:
 {
+  "intent": "catat|tanya_jadwal|tanya_catatan",
   "importance": "P0|P1|P2|P3",
   "category": "jadwal|ide|tugas|info|orang|test|noise",
   "has_schedule": boolean,
   "datetime_iso": "YYYY-MM-DDTHH:mm:ss+07:00" atau null,
   "event": "ringkas 3-8 kata" atau null,
-  "reason": "1 kalimat singkat kenapa importance & category ini"
+  "date_range": "hari_ini|besok|lusa|minggu_ini|minggu_depan|bulan_ini" atau null,
+  "search_query": "kata kunci kalau tanya_catatan" atau null,
+  "reason": "1 kalimat singkat alasan klasifikasi"
 }
+
+Pedoman intent:
+- catat: user kasih info/jadwal baru ("besok jam 10 meeting", "ide bisnis baru")
+- tanya_jadwal: user TANYA tentang jadwal ("jadwal besok apa?", "minggu ini ada apa?", "hari ini saya ngapain?", "ada apa lusa?")
+- tanya_catatan: user TANYA isi catatan lain ("saya pernah catat soal X?", "siapa orang yang saya tulis kemarin?", "ide apa yang saya simpan minggu lalu?")
 
 Pedoman importance:
 - P0: urgent kritis hari ini (rapat bos, bayar tagihan jatuh tempo)
@@ -59,14 +67,17 @@ export const analyze = async (text) => {
   try {
     const parsed = JSON.parse(raw);
     return {
+      intent: parsed.intent || "catat",
       importance: parsed.importance || "P2",
       category: parsed.category || "info",
       has_schedule: !!parsed.has_schedule,
       datetime_iso: parsed.datetime_iso || null,
       event: parsed.event || null,
+      date_range: parsed.date_range || null,
+      search_query: parsed.search_query || null,
       reason: parsed.reason || "",
     };
   } catch {
-    return { importance: "P2", category: "info", has_schedule: false, reason: "parse error" };
+    return { intent: "catat", importance: "P2", category: "info", has_schedule: false, reason: "parse error" };
   }
 };

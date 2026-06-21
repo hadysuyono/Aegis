@@ -6,6 +6,7 @@ import { Telegraf } from "telegraf";
 import { writeFile } from "./lib/store.js";
 import { analyze } from "./lib/groq.js";
 import { addReminder, dueReminders, markNotified, listActive, removeReminder } from "./lib/reminders.js";
+import { answerSchedule } from "./lib/query.js";
 import { nowJakarta, formatFriendly } from "./lib/time.js";
 
 const REQUIRED = [
@@ -97,6 +98,17 @@ bot.on("text", async (ctx) => {
 
     // 1. Analisis pesan
     const a = await analyze(text);
+
+    // 1b. Tanya jadwal → jawab dari reminders
+    if (a.intent === "tanya_jadwal") {
+      const answer = await answerSchedule(a.date_range);
+      return ctx.reply(answer);
+    }
+
+    // 1c. Tanya catatan (versi awal: belum dukung full search inbox)
+    if (a.intent === "tanya_catatan") {
+      return ctx.reply("🔎 Fitur cari catatan belum aktif. Sebentar lagi saya bangun (Memory Bank).");
+    }
 
     // 2. Test/noise → archive silent (tidak balas)
     if (a.category === "test" || a.category === "noise" || a.importance === "P3") {
