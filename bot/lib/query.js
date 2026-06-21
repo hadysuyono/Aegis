@@ -1,6 +1,8 @@
 // Query — jawab pertanyaan Hady dari vault.
+// Sumber jadwal: reminders.json (eksplisit) + events.json (hasil distill catatan).
 
 import { listActive } from "./reminders.js";
+import { readJSON } from "./store.js";
 import { formatFriendly } from "./time.js";
 import { formatScheduleAnswer } from "./groq.js";
 
@@ -37,8 +39,30 @@ const buildRange = (rangeKey) => {
 
 export const answerSchedule = async (question, rangeKey) => {
   const [start, end, label] = buildRange(rangeKey);
-  const all = await listActive();
-  const inRange = all
+
+  const [reminders, eventsDoc] = await Promise.all([
+    listActive(),
+    readJSON("07-SYSTEM/memory/events.json", { events: [] }),
+  ]);
+
+  const fromReminders = reminders.map(r => ({
+    event: r.event, datetime_iso: r.datetime_iso, source: "reminder",
+  }));
+  const fromEvents = (eventsDoc.events || []).map(e => ({
+    event: e.event, datetime_iso: e.datetime_iso, source: "event",
+  }));
+
+  // Gabung + dedupe by datetime+event (kalau muncul di dua tempat)
+  const seen = new Set();
+  const merged = [...fromReminders, ...fromEvents].filter(x => {
+    if (!x.datetime_iso || !x.event) return false;
+    const key = `${x.datetime_iso}|${x.event.toLowerCase()}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+
+  const inRange = merged
     .filter(r => r.datetime_iso >= start && r.datetime_iso <= end)
     .sort((a, b) => a.datetime_iso.localeCompare(b.datetime_iso))
     .map(r => ({ event: r.event, friendly: formatFriendly(r.datetime_iso) }));
