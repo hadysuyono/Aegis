@@ -2,11 +2,11 @@
   "daily": {
     "2026-06-22": {
       "senior": {
-        "calls": 8,
-        "prompt": 33226,
-        "completion": 2530,
+        "calls": 9,
+        "prompt": 37326,
+        "completion": 3124,
         "by_model": {
-          "groq/compound": 7,
+          "groq/compound": 8,
           "groq/compound-mini": 1
         }
       }
