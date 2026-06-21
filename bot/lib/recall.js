@@ -71,17 +71,18 @@ export const answerCatatan = async (question) => {
 
 Hady bertanya: "${question}"
 
-Memori relevan (terstruktur, hasil distill catatan-catatan Hady):
+Memori internal Aegis (hasil distill catatan Hady):
 ${JSON.stringify(ctx, null, 2)}
 
-${isEmpty ? "MEMORI KOSONG untuk pertanyaan ini." : ""}
+${isEmpty ? "MEMORI INTERNAL KOSONG untuk pertanyaan ini." : ""}
 
 Tugas:
-- Jawab Hady langsung dalam Bahasa Indonesia santai-sopan, panggil "Pak".
-- Maksimal 4 kalimat. Boleh sebutkan fakta dari memori di atas.
-- KALAU memori tidak punya jawaban → jujur bilang "saya belum punya catatan soal itu" dan saran apa yang bisa Bapak catat.
-- Jangan mengarang. Hanya pakai fakta yang ada di memori.
-- Maks 1 emoji.`;
+- Jawab langsung dalam Bahasa Indonesia santai-sopan, panggil "Pak".
+- Prioritas: pakai memori internal di atas KALAU relevan dengan pertanyaan.
+- KALAU pertanyaan tentang FAKTA UMUM/dunia luar (berita, harga, cuaca, info publik) yang tidak ada di memori, kamu BOLEH gunakan kemampuan web search internalmu untuk jawab.
+- KALAU pertanyaan tentang URUSAN PRIBADI Hady tapi memori kosong → jujur bilang belum ada catatan dan saran apa yang bisa dicatat.
+- JANGAN mengarang fakta pribadi tentang Hady.
+- Maks 4 kalimat, 1 emoji.`;
 
   const { content } = await aiCall("senior", { prompt, temperature: 0.3, max_tokens: 400 });
   return content || "Maaf Pak, ada masalah saat menjawab.";

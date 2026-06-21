@@ -109,6 +109,23 @@ bot.command("distill", async (ctx) => {
   }
 });
 
+bot.command("cari", async (ctx) => {
+  const q = ctx.message.text.replace(/^\/cari\s*/i, "").trim();
+  if (!q) return ctx.reply("Format: /cari <pertanyaan>\nContoh: /cari harga BBM pertamax hari ini");
+  await ctx.reply("🔎 Scout web... tunggu sebentar.");
+  try {
+    const { aiCall } = await import("./lib/ai.js");
+    const prompt = `Kamu Aegis. Hady minta info: "${q}"
+
+Pakai kemampuan web search internalmu untuk cari jawaban terbaru. Jawab Bahasa Indonesia sopan (panggil "Pak"), maksimal 5 kalimat, sebut sumber kalau ada. Kalau tidak yakin atau tidak ketemu, jujur bilang.`;
+    const { content } = await aiCall("senior", { prompt, temperature: 0.3, max_tokens: 500 });
+    await ctx.reply(content || "Maaf Pak, tidak dapat hasil.", fbKeyboard("scout"));
+  } catch (err) {
+    console.error("cari error:", err);
+    await ctx.reply(`❌ Gagal scout: ${err.message}`);
+  }
+});
+
 bot.command("refleksi", async (ctx) => {
   await ctx.reply("🪞 Bikin refleksi minggu ini... tunggu sebentar.");
   try {
