@@ -9,8 +9,8 @@ const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 const MODELS = {
   // CEO / Senior Advisor: TPD unlimited. Semua chat natural ke Hady & reasoning berat.
   senior: ["groq/compound", "groq/compound-mini", "openai/gpt-oss-120b", "llama-3.3-70b-versatile"],
-  // Analyst: ekstrak entitas, distill (nuance penting). Compound jadi fallback berkualitas.
-  analyze: ["llama-3.3-70b-versatile", "groq/compound", "meta-llama/llama-4-scout-17b-16e-instruct", "qwen/qwen3-32b"],
+  // Analyst: ekstrak entitas, distill. Compound TIDAK support response_format JSON, jadi diskip.
+  analyze: ["llama-3.3-70b-versatile", "meta-llama/llama-4-scout-17b-16e-instruct", "qwen/qwen3-32b", "openai/gpt-oss-120b"],
   // Junior / reflex: klasifikasi cepat tiap pesan masuk (volume tinggi)
   fast: ["llama-3.1-8b-instant", "qwen/qwen3-32b", "llama-3.3-70b-versatile"],
   // Alias 'reason' = senior (backward compat)

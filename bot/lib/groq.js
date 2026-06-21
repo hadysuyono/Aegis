@@ -113,8 +113,11 @@ Output: {
 
 Catatan: """${text}"""`;
 
-  const { content } = await aiCall("senior", { prompt, temperature: 0.1, max_tokens: 800, json: true });
-  const p = safeJSON(content, {});
+  const { content, model } = await aiCall("analyze", { prompt, temperature: 0.1, max_tokens: 800, json: true });
+  const p = safeJSON(content, null);
+  if (!p) console.error(`[extract] JSON parse fail model=${model} raw=${content?.slice(0, 200)}`);
+  else console.log(`[extract] model=${model} keys=${Object.keys(p).join(",")} owner=${!!p.owner_profile}`);
+  if (!p) return { owner_profile: null, people: [], projects: [], events: [], decisions: [], beliefs: [] };
   return {
     owner_profile: p.owner_profile && typeof p.owner_profile === "object" ? p.owner_profile : null,
     people: Array.isArray(p.people) ? p.people : [],

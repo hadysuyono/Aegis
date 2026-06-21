@@ -273,7 +273,11 @@ bot.on("text", async (ctx) => {
       if (extracted.beliefs) parts.push(`${extracted.beliefs} belief`);
       if (parts.length > 0) {
         await ctx.reply(`🧠 Dipelajari: ${parts.join(", ")}.`);
+      } else {
+        await ctx.reply(`📝 Tercatat ke inbox. (Tidak ada entitas baru yg di-ekstrak)`);
       }
+    } else {
+      await ctx.reply(`📝 Tercatat ke inbox. (distill return null)`);
     }
     return;
   } catch (err) {
