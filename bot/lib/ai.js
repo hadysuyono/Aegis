@@ -38,9 +38,9 @@ const callWithFallback = async (role, params) => {
   throw lastErr || new Error(`No model available for role ${role}`);
 };
 
-export const aiCall = (role, { prompt, temperature = 0.2, max_tokens = 400, json = false }) =>
+export const aiCall = (role, { prompt, messages, temperature = 0.2, max_tokens = 400, json = false }) =>
   callWithFallback(role, {
-    messages: [{ role: "user", content: prompt }],
+    messages: messages || [{ role: "user", content: prompt }],
     temperature,
     max_tokens,
     ...(json ? { response_format: { type: "json_object" } } : {}),
