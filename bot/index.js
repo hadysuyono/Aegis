@@ -12,6 +12,8 @@ import { recordFeedback, summary as feedbackSummary } from "./lib/feedback.js";
 import { aiCall } from "./lib/ai.js";
 import { generateAuthUrl, exchangeCode, createEvent as gcalCreate, isConfigured as gcalReady } from "./lib/google-calendar.js";
 import { generateMorningBrief, generateEveningRecap } from "./lib/briefings.js";
+import { detectAnomalies } from "./lib/anomaly.js";
+import { dailySnapshot } from "./lib/backup.js";
 import { nowJakarta, formatFriendly } from "./lib/time.js";
 
 const REQUIRED = [
@@ -124,6 +126,23 @@ bot.command("brief", async (ctx) => {
   try {
     const b = await generateMorningBrief();
     await ctx.reply(b, { parse_mode: "Markdown", ...fbKeyboard("morning") });
+  } catch (err) { await ctx.reply(`❌ ${err.message}`); }
+});
+
+bot.command("anomaly", async (ctx) => {
+  await ctx.reply("🔍 Scan anomali...");
+  try {
+    const res = await detectAnomalies();
+    if (!res.hasAnomaly) return ctx.reply("✅ Bersih, tidak ada anomali.");
+    await ctx.reply(res.message, fbKeyboard("anomaly"));
+  } catch (err) { await ctx.reply(`❌ ${err.message}`); }
+});
+
+bot.command("backup", async (ctx) => {
+  await ctx.reply("💾 Bikin snapshot...");
+  try {
+    const res = await dailySnapshot();
+    await ctx.reply(`✅ Snapshot ${res.date}: ${res.count} file di 06-ARCHIVE/backup/${res.date}/`);
   } catch (err) { await ctx.reply(`❌ ${err.message}`); }
 });
 
@@ -359,6 +378,36 @@ const recapLoop = async () => {
   } catch (err) { console.error("recapLoop error:", err.message); }
 };
 setInterval(recapLoop, 60_000);
+
+// === Daily backup snapshot 03:00 WIB (jam paling sepi) ===
+let backupLastRunDate = null;
+const backupLoop = async () => {
+  try {
+    const n = nowJakarta();
+    if (n.iso.slice(11, 13) === "03" && n.iso.slice(14, 16) === "00" && backupLastRunDate !== n.date) {
+      backupLastRunDate = n.date;
+      const res = await dailySnapshot();
+      console.log(`[backup] daily snapshot ${res.date}: ${res.count} files`);
+    }
+  } catch (err) { console.error("backupLoop error:", err.message); }
+};
+setInterval(backupLoop, 60_000);
+
+// === Anomaly scan 12:00 WIB siang (kalau ada, push notif ke Hady) ===
+let anomalyLastRunDate = null;
+const anomalyLoop = async () => {
+  try {
+    const n = nowJakarta();
+    if (n.iso.slice(11, 13) === "12" && n.iso.slice(14, 16) === "00" && anomalyLastRunDate !== n.date) {
+      anomalyLastRunDate = n.date;
+      const res = await detectAnomalies();
+      if (res.hasAnomaly) {
+        await bot.telegram.sendMessage(OWNER_ID, res.message, fbKeyboard("anomaly"));
+      }
+    }
+  } catch (err) { console.error("anomalyLoop error:", err.message); }
+};
+setInterval(anomalyLoop, 60_000);
 
 // === Startup ===
 bot.catch((err) => console.error("Bot error:", err));
