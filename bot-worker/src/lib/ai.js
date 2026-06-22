@@ -1,12 +1,31 @@
-// AI router — Groq via fetch (no SDK biar ringan & kompatible Workers).
+// AI router — multi-provider (Groq + Z.AI) via fetch.
+// Format model entry: "groq/<id>" atau "zai/<id>".
 
-const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
+const PROVIDERS = {
+  groq: {
+    url: "https://api.groq.com/openai/v1/chat/completions",
+    keyEnv: "GROQ_API_KEY",
+  },
+  zai: {
+    url: "https://api.z.ai/api/paas/v4/chat/completions",
+    keyEnv: "ZAI_API_KEY",
+  },
+};
 
 const MODELS = {
-  senior: ["groq/compound", "groq/compound-mini"],
-  reason: ["openai/gpt-oss-120b", "llama-3.3-70b-versatile", "meta-llama/llama-4-scout-17b-16e-instruct"],
-  analyze: ["llama-3.3-70b-versatile", "meta-llama/llama-4-scout-17b-16e-instruct", "qwen/qwen3-32b"],
-  fast: ["llama-3.1-8b-instant", "qwen/qwen3-32b"],
+  // Chat utama Pak Hady — compound (TPD ∞) → Z.AI GLM-4.5 → llama 70b
+  senior: ["groq/groq/compound", "groq/groq/compound-mini", "zai/glm-4.5", "groq/llama-3.3-70b-versatile"],
+  // Reasoning (brief, recap, anomaly, recall, self-tune)
+  reason: ["groq/openai/gpt-oss-120b", "zai/glm-4.5-flash", "groq/llama-3.3-70b-versatile", "groq/meta-llama/llama-4-scout-17b-16e-instruct"],
+  // Distill (JSON output)
+  analyze: ["groq/llama-3.3-70b-versatile", "groq/meta-llama/llama-4-scout-17b-16e-instruct", "groq/qwen/qwen3-32b"],
+  // Klasifikasi cepat (kalau dipakai)
+  fast: ["groq/llama-3.1-8b-instant", "groq/qwen/qwen3-32b"],
+};
+
+const splitModel = (full) => {
+  const slash = full.indexOf("/");
+  return { provider: full.slice(0, slash), model: full.slice(slash + 1) };
 };
 
 const isRateLimit = (status, text) =>
@@ -47,7 +66,12 @@ export const aiCall = async (env, role, { prompt, messages, temperature = 0.2, m
   const list = MODELS[role] || MODELS.fast;
   let lastErr = "";
   let compoundExhausted = false;
-  for (const model of list) {
+  for (const full of list) {
+    const { provider, model } = splitModel(full);
+    const cfg = PROVIDERS[provider];
+    if (!cfg) { lastErr = `provider tidak dikenal: ${provider}`; continue; }
+    const apiKey = env[cfg.keyEnv];
+    if (!apiKey) { lastErr = `key kosong: ${cfg.keyEnv}`; continue; }
     try {
       const body = {
         model,
@@ -56,10 +80,10 @@ export const aiCall = async (env, role, { prompt, messages, temperature = 0.2, m
         max_tokens,
         ...(json ? { response_format: { type: "json_object" } } : {}),
       };
-      const res = await fetch(GROQ_URL, {
+      const res = await fetch(cfg.url, {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${env.GROQ_API_KEY}`,
+          Authorization: `Bearer ${apiKey}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify(body),
@@ -68,21 +92,20 @@ export const aiCall = async (env, role, { prompt, messages, temperature = 0.2, m
         const data = await res.json();
         return {
           content: data.choices?.[0]?.message?.content?.trim() || "",
-          model,
+          model: full,
           usage: data.usage,
         };
       }
       const errText = await res.text();
-      lastErr = `${res.status} ${errText}`;
+      lastErr = `${full}: ${res.status} ${errText}`;
       if (!isRateLimit(res.status, errText)) throw new Error(lastErr);
       if (role === "senior" && /compound/i.test(model)) compoundExhausted = true;
-      console.warn(`[ai] ${role}/${model} rate-limit → fallback`);
+      console.warn(`[ai] ${role}/${full} rate-limit → fallback`);
     } catch (err) {
       lastErr = err.message;
       if (!/rate|429|quota/i.test(err.message)) throw err;
     }
   }
-  // Final fail — kalau senior compound habis, notify 1x per hari
   if (role === "senior" && compoundExhausted) await notifyQuotaExhausted(env);
   throw new Error(`No model available for ${role}: ${lastErr}`);
 };
