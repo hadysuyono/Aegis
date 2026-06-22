@@ -55,6 +55,9 @@ export const TOOL_SCHEMA = [
   // === Vision (dari Z.AI GLM-4.6V) ===
   { name: "analyze_image", description: "Analisa gambar dari URL — vision via GLM-4.6V-Flash (FREE). Untuk parse screenshot, foto dokumen, dll.", params: { image_url: "URL gambar", question: "apa yang Hady ingin diketahui dari gambar" } },
 
+  // === Image generation (Cloudflare Workers AI Flux - FREE) ===
+  { name: "generate_image", description: "Bikin gambar dari prompt teks pakai Flux model (FREE). Auto kirim ke Telegram Pak Hady.", params: { prompt: "deskripsi gambar dalam bahasa Inggris (lebih bagus hasil)", style: "realistic|cartoon|sketch|... (opsional)" } },
+
   // === Planning & autonomous (dari Claude) ===
   { name: "make_plan", description: "Bikin rencana detail multi-step untuk goal kompleks. Output: plan terstruktur yang bisa di-execute.", params: { goal: "tujuan akhir", constraints: "batasan/budget/waktu (opsional)" } },
   { name: "compare_options", description: "Bandingkan 2-4 pilihan berdasarkan kriteria.", params: { options: "list pilihan (string)", criteria: "kriteria perbandingan (string)" } },
@@ -484,6 +487,33 @@ Tulis kaya, padat, dan to-the-point. Maks 800 kata.`;
         const m = content.match(/```[\w]*\n([\s\S]*?)```/);
         const tests = m ? m[1].trim() : content.trim();
         return J({ ok: true, framework: fw, tests });
+      }
+
+      // === Image generation (Cloudflare AI Flux, FREE) ===
+      case "generate_image": {
+        if (!params.prompt) return J({ error: "prompt wajib" });
+        const styleNote = params.style ? `, style: ${params.style}` : "";
+        const fullPrompt = `${params.prompt}${styleNote}`;
+        try {
+          // Flux Schnell — fast, 4 step diffusion
+          const resp = await env.AI.run("@cf/black-forest-labs/flux-1-schnell", {
+            prompt: fullPrompt,
+            steps: 4,
+          });
+          // resp.image = base64 string
+          if (!resp?.image) return J({ error: "image generation gagal" });
+          const binaryStr = atob(resp.image);
+          const bytes = new Uint8Array(binaryStr.length);
+          for (let i = 0; i < binaryStr.length; i++) bytes[i] = binaryStr.charCodeAt(i);
+          // Kirim langsung ke Pak Hady
+          const fd = new FormData();
+          fd.append("chat_id", String(env.TELEGRAM_CHAT_ID));
+          fd.append("photo", new Blob([bytes], { type: "image/jpeg" }), "aegis.jpg");
+          fd.append("caption", `🎨 ${fullPrompt}`);
+          const tgRes = await fetch(`https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/sendPhoto`, { method: "POST", body: fd });
+          if (!tgRes.ok) return J({ error: `send fail: ${tgRes.status}` });
+          return J({ ok: true, prompt: fullPrompt, sent: true });
+        } catch (err) { return J({ error: err.message }); }
       }
 
       // === Vision (GLM-4.6V via Z.AI, FREE) ===

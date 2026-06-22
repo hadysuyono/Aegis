@@ -211,6 +211,79 @@ const handlePhoto = async (env, msg) => {
   }
 };
 
+const handleVideo = async (env, msg) => {
+  await sendMessage(env, msg.chat.id, "🎥 Analisa video (thumbnail + suara)...");
+  try {
+    const video = msg.video || msg.video_note || msg.animation;
+    const thumb = video.thumbnail || video.thumb;
+    const caption = msg.caption?.trim() || "";
+
+    // 1. Vision: analisa thumbnail
+    let visual = "(tidak ada thumbnail)";
+    if (thumb?.file_id) {
+      const thumbLink = await getFileLink(env, thumb.file_id);
+      const visionRes = await fetch("https://api.z.ai/api/paas/v4/chat/completions", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${env.ZAI_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "glm-4.6v-flash",
+          messages: [{
+            role: "user",
+            content: [
+              { type: "image_url", image_url: { url: thumbLink } },
+              { type: "text", text: "Deskripsikan adegan utama dalam thumbnail video ini (objek, orang, setting). Singkat 2-3 kalimat." },
+            ],
+          }],
+          temperature: 0.3, max_tokens: 400,
+        }),
+      });
+      if (visionRes.ok) {
+        const v = await visionRes.json();
+        visual = v.choices?.[0]?.message?.content || visual;
+      }
+    }
+
+    // 2. Audio: transkrip suara (kalau ada)
+    let audio = "(tidak ada audio jelas)";
+    try {
+      const videoLink = await getFileLink(env, video.file_id);
+      const videoRes = await fetch(videoLink);
+      if (videoRes.ok) {
+        const videoBuf = await videoRes.arrayBuffer();
+        // Max 25 MB Whisper limit
+        if (videoBuf.byteLength <= 25 * 1024 * 1024) {
+          const fd = new FormData();
+          fd.append("file", new Blob([videoBuf], { type: video.mime_type || "video/mp4" }), "video.mp4");
+          fd.append("model", "whisper-large-v3");
+          fd.append("language", "id");
+          const trRes = await fetch("https://api.groq.com/openai/v1/audio/transcriptions", {
+            method: "POST",
+            headers: { Authorization: `Bearer ${env.GROQ_API_KEY}` },
+            body: fd,
+          });
+          if (trRes.ok) {
+            const { text } = await trRes.json();
+            if (text?.trim()) audio = text.trim();
+          }
+        }
+      }
+    } catch (e) { console.warn("[video audio]", e.message); }
+
+    // 3. Combine via reasoning
+    const today = nowJakarta();
+    const synthPrompt = `Kamu Aegis. Pak Hady kirim video${caption ? ` dengan caption: "${caption}"` : ""}.
+
+Visual (dari thumbnail): ${visual}
+Audio (transkrip): ${audio}
+
+Hari ini ${today.iso}. Jawab Pak Hady sopan, 3-4 kalimat, sebutkan apa yang kamu paham dari video — visual & suara. Kalau Pak Hady kasih caption pertanyaan, jawab itu.`;
+    const { content } = await aiCall(env, "reason", { prompt: synthPrompt, temperature: 0.3, max_tokens: 600 });
+    return sendMessage(env, msg.chat.id, content, fbKeyboard("video"));
+  } catch (err) {
+    return sendMessage(env, msg.chat.id, `❌ Gagal analisa video: ${err.message}`);
+  }
+};
+
 const handleCallback = async (env, cb) => {
   const data = cb.data || "";
   if (!data.startsWith("fb:")) return;
@@ -328,6 +401,7 @@ export default {
         if (msg.text) return handleText(env, msg);
         if (msg.voice) return handleVoice(env, msg);
         if (msg.photo) return handlePhoto(env, msg);
+        if (msg.video || msg.video_note || msg.animation) return handleVideo(env, msg);
       } catch (err) {
         console.error("[handler]", err);
         try { await sendMessage(env, env.TELEGRAM_CHAT_ID, `❌ Error: ${err.message?.slice(0, 200)}`); } catch {}

@@ -7,6 +7,10 @@ compatibility_flags = ["nodejs_compat"]
 binding = "AEGIS_KV"
 id = "71cb7cf20b9848eb9209d99293dafe8f"
 
+# Cloudflare Workers AI untuk image generation (Flux Schnell - free tier)
+[ai]
+binding = "AI"
+
 # 1 cron tiap 10 menit — dispatch internal per slot waktu (workers free max 5 cron)
 [triggers]
 crons = ["*/10 * * * *"]

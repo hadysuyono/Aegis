@@ -23,6 +23,17 @@ export const getFileLink = async (env, file_id) => {
   return `https://api.telegram.org/file/bot${env.TELEGRAM_BOT_TOKEN}/${data.result.file_path}`;
 };
 
+export const sendPhoto = async (env, chat_id, imageBuffer, caption = "") => {
+  const fd = new FormData();
+  fd.append("chat_id", String(chat_id));
+  fd.append("photo", new Blob([imageBuffer], { type: "image/jpeg" }), "image.jpg");
+  if (caption) fd.append("caption", caption);
+  return fetch(`https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/sendPhoto`, {
+    method: "POST",
+    body: fd,
+  });
+};
+
 export const fbKeyboard = (source) => ({
   reply_markup: {
     inline_keyboard: [[
