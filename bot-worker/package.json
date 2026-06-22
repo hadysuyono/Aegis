@@ -1,0 +1,15 @@
+{
+  "name": "aegis-bot-worker",
+  "version": "1.0.0",
+  "description": "Aegis Telegram bot on Cloudflare Workers (gratis selamanya)",
+  "main": "src/worker.js",
+  "type": "module",
+  "scripts": {
+    "deploy": "wrangler deploy",
+    "dev": "wrangler dev",
+    "tail": "wrangler tail"
+  },
+  "devDependencies": {
+    "wrangler": "^3.78.0"
+  }
+}
