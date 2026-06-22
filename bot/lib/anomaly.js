@@ -57,7 +57,7 @@ ${flags.map((f, i) => `${i + 1}. ${f}`).join("\n")}
 Format: mulai dengan "🔍 Saya spot beberapa hal:". Lalu list singkat. Akhiri dengan saran tindakan 1 kalimat.`;
 
   try {
-    const { content } = await aiCall("senior", { prompt, temperature: 0.3, max_tokens: 400 });
+    const { content } = await aiCall("reason", { prompt, temperature: 0.3, max_tokens: 400 });
     return { hasAnomaly: true, count: flags.length, message: content || flags.join("\n") };
   } catch {
     return { hasAnomaly: true, count: flags.length, message: `🔍 Anomali:\n${flags.join("\n")}` };

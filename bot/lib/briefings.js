@@ -79,7 +79,7 @@ Format Markdown, 4 section max, total 200 kata:
 
 Jangan ucapkan "berikut adalah" — langsung mulai.`;
 
-  const { content } = await aiCall("senior", { prompt, temperature: 0.3, max_tokens: 600 });
+  const { content } = await aiCall("reason", { prompt, temperature: 0.3, max_tokens: 600 });
   return content || "🌅 Pagi Pak Hady, hari ini saya belum bisa rangkai brief.";
 };
 
@@ -121,6 +121,6 @@ Format Markdown, total 150 kata max:
 
 Jujur, jangan dipaksa-paksakan kalau data tipis.`;
 
-  const { content } = await aiCall("senior", { prompt, temperature: 0.4, max_tokens: 500 });
+  const { content } = await aiCall("reason", { prompt, temperature: 0.4, max_tokens: 500 });
   return content || "🌙 Malam Pak Hady, hari ini saya belum bisa rangkai recap.";
 };

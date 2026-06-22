@@ -56,7 +56,7 @@ Tugas (format Markdown, total 300 kata max):
 
 Jujur, jangan dipaksa kalau tidak ada saran kuat.`;
 
-  const { content } = await aiCall("senior", { prompt, temperature: 0.3, max_tokens: 700 });
+  const { content } = await aiCall("reason", { prompt, temperature: 0.3, max_tokens: 700 });
   const path = `04-AEGIS-OUTPUTS/self-tuning/${today.date}-claude-md-suggestion.md`;
   const body = `---\ncreated: ${today.iso}\nsource: self_update\n---\n\n${content}\n`;
   await writeFile(path, body, `self-tuning: claude.md suggestion ${today.date}`);
@@ -100,7 +100,7 @@ Tugas (300 kata max):
 
 Jujur dan to-the-point.`;
 
-  const { content } = await aiCall("senior", { prompt, temperature: 0.3, max_tokens: 500 });
+  const { content } = await aiCall("reason", { prompt, temperature: 0.3, max_tokens: 500 });
   const path = `04-AEGIS-OUTPUTS/self-tuning/${today.date}-feedback-digest.md`;
   const body = `---\ncreated: ${today.iso}\nsource: feedback_digest\n---\n\n${content}\n`;
   await writeFile(path, body, `self-tuning: feedback digest ${today.date}`);

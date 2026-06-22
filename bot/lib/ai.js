@@ -6,16 +6,16 @@ import { trackUsage } from "./usage.js";
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
-// Peta peran → model utama + fallback
+// Peta peran → model utama + fallback. Compound RPD 250 — HEMAT untuk chat utama saja.
 const MODELS = {
-  // CEO / Senior Advisor: TPD unlimited. Semua chat natural ke Hady & reasoning berat.
+  // CEO: chat utama Hady (compound). RPD 250 = ~250 reply per hari, cukup untuk dialog.
   senior: ["groq/compound", "groq/compound-mini", "openai/gpt-oss-120b", "llama-3.3-70b-versatile"],
-  // Analyst: ekstrak entitas, distill. Compound TIDAK support response_format JSON, jadi diskip.
+  // Reasoning (briefings, anomaly, recall, self-tuning) — pakai gpt-oss-120b, hindari compound
+  reason: ["openai/gpt-oss-120b", "llama-3.3-70b-versatile", "meta-llama/llama-4-scout-17b-16e-instruct"],
+  // Analyst: ekstrak entitas, distill. JSON output — compound diskip.
   analyze: ["llama-3.3-70b-versatile", "meta-llama/llama-4-scout-17b-16e-instruct", "qwen/qwen3-32b", "openai/gpt-oss-120b"],
-  // Junior / reflex: klasifikasi cepat tiap pesan masuk (volume tinggi)
+  // Junior / reflex: klasifikasi cepat (volume tinggi)
   fast: ["llama-3.1-8b-instant", "qwen/qwen3-32b", "llama-3.3-70b-versatile"],
-  // Alias 'reason' = senior (backward compat)
-  reason: ["groq/compound", "groq/compound-mini", "openai/gpt-oss-120b", "llama-3.3-70b-versatile"],
 };
 
 const isRateLimit = (err) =>

@@ -84,6 +84,6 @@ Tugas:
 - JANGAN mengarang fakta pribadi tentang Hady.
 - Maks 4 kalimat, 1 emoji.`;
 
-  const { content } = await aiCall("senior", { prompt, temperature: 0.3, max_tokens: 400 });
+  const { content } = await aiCall("reason", { prompt, temperature: 0.3, max_tokens: 400 });
   return content || "Maaf Pak, ada masalah saat menjawab.";
 };

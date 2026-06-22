@@ -82,7 +82,7 @@ Struktur:
 
 Maks 250 kata. Jujur kalau data tipis — jangan dipaksa-paksakan.`;
 
-  const { content } = await aiCall("senior", { prompt, temperature: 0.4, max_tokens: 800 });
+  const { content } = await aiCall("reason", { prompt, temperature: 0.4, max_tokens: 800 });
 
   const wk = isoWeek(new Date());
   const path = `04-AEGIS-OUTPUTS/syntheses/${wk}.md`;
