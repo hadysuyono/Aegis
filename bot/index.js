@@ -15,6 +15,7 @@ import { generateMorningBrief, generateEveningRecap } from "./lib/briefings.js";
 import { detectAnomalies } from "./lib/anomaly.js";
 import { dailySnapshot } from "./lib/backup.js";
 import { generateClaudeMdSuggestion, generateFeedbackDigest } from "./lib/self-update.js";
+import { syncKnowledge } from "./lib/knowledge-sync.js";
 import { getUsageToday, getUsageLast7Days } from "./lib/usage.js";
 import { nowJakarta, formatFriendly } from "./lib/time.js";
 
@@ -175,6 +176,14 @@ bot.command("tune", async (ctx) => {
     let msg = `📝 Saran CLAUDE.md → ${c.path}\n\n${c.snippet}`;
     if (!f.skipped) msg += `\n\n---\n\n📊 Feedback Digest → ${f.path}\n\n${f.snippet}`;
     await ctx.reply(msg);
+  } catch (err) { await ctx.reply(`❌ ${err.message}`); }
+});
+
+bot.command("sync_knowledge", async (ctx) => {
+  await ctx.reply("📚 Sync knowledge dari memory ke 01-KNOWLEDGE/...");
+  try {
+    const res = await syncKnowledge();
+    await ctx.reply(`✅ ${res.files} file ter-update di 01-KNOWLEDGE/ — buka Obsidian, refresh, akan lihat profile/people/projects/events/decisions/beliefs.md`);
   } catch (err) { await ctx.reply(`❌ ${err.message}`); }
 });
 
@@ -348,7 +357,7 @@ const reminderLoop = async () => {
 setInterval(reminderLoop, 60_000);
 setTimeout(reminderLoop, 5_000);
 
-// === Nightly distill jam 23:00 WIB ===
+// === Nightly distill jam 23:00 WIB + auto-sync knowledge ===
 let distillLastRunDate = null;
 const distillLoop = async () => {
   try {
@@ -363,6 +372,8 @@ const distillLoop = async () => {
           `🌙 Distill malam: ${res.processed} catatan diproses.\n👤 +${t.people} • 📦 +${t.projects} • 📅 +${t.events}`
         );
       }
+      // Sync knowledge ke 01-KNOWLEDGE/ setelah distill (versi terbaru memory)
+      await syncKnowledge().catch(e => console.error("nightly knowledge sync:", e.message));
     }
   } catch (err) { console.error("distillLoop error:", err.message); }
 };
