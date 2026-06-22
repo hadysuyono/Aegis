@@ -6,7 +6,7 @@ compatibility_flags = ["nodejs_compat"]
 # KV namespace untuk state percakapan & cache
 [[kv_namespaces]]
 binding = "AEGIS_KV"
-id = "GANTI_DENGAN_KV_ID_DARI_DASHBOARD"
+id = "71cb7cf20b9848eb9209d99293dafe8f"
 
 # Cron triggers — schedule jobs
 [triggers]
