@@ -43,13 +43,13 @@ const checkCompoundQuota = async () => {
   } catch (e) { console.warn("[quota check]", e.message); }
 };
 
-// Peta peran → model utama + fallback. Compound RPD 250 — HEMAT untuk chat utama saja.
+// Peta peran → model utama + fallback. Compound TPD unlimited — buat chat utama saja.
 const MODELS = {
-  // CEO: chat utama Hady (compound). RPD 250 = ~250 reply per hari, cukup untuk dialog.
-  senior: ["groq/compound", "groq/compound-mini", "openai/gpt-oss-120b", "llama-3.3-70b-versatile"],
-  // Reasoning (briefings, anomaly, recall, self-tuning) — pakai gpt-oss-120b, hindari compound
+  // CEO: chat utama Hady (TPD unlimited compound). RPD 250+250=500 total per hari.
+  senior: ["groq/compound", "groq/compound-mini"],
+  // Reasoning (briefings, anomaly, recall, self-tuning, refleksi)
   reason: ["openai/gpt-oss-120b", "llama-3.3-70b-versatile", "meta-llama/llama-4-scout-17b-16e-instruct"],
-  // Analyst: ekstrak entitas, distill. JSON output — compound diskip.
+  // Analyst: ekstrak entitas, distill (JSON output)
   analyze: ["llama-3.3-70b-versatile", "meta-llama/llama-4-scout-17b-16e-instruct", "qwen/qwen3-32b", "openai/gpt-oss-120b"],
   // Junior / reflex: klasifikasi cepat (volume tinggi)
   fast: ["llama-3.1-8b-instant", "qwen/qwen3-32b", "llama-3.3-70b-versatile"],
