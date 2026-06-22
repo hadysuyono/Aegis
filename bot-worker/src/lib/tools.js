@@ -2,6 +2,7 @@
 
 import { writeFile, readJSON, listFolder, readText } from "./store.js";
 import { addReminder, listActive, removeReminder } from "./reminders.js";
+import { distillText } from "./distill.js";
 import { nowJakarta, formatFriendly } from "./time.js";
 import { aiCall } from "./ai.js";
 
@@ -120,7 +121,9 @@ export const dispatch = async (env, toolName, params = {}) => {
         const importance = ["P0", "P1", "P2"].includes(params.importance) ? params.importance : "P2";
         const category = ["ide", "tugas", "info", "orang", "jadwal"].includes(params.category) ? params.category : "info";
         const path = await saveToInbox(env, params.text, { importance, category });
-        return J({ ok: true, saved_to: path });
+        // Auto-distill real-time biar memory langsung kaya
+        const totals = await distillText(env, params.text, path.split("/").pop()).catch(() => null);
+        return J({ ok: true, saved_to: path, learned: totals || {} });
       }
       case "get_schedule": {
         const range = ["hari_ini", "besok", "lusa", "minggu_ini", "minggu_depan", "bulan_ini"].includes(params.range) ? params.range : "besok";

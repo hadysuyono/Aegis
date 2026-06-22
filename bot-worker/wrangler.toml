@@ -3,19 +3,10 @@ main = "src/worker.js"
 compatibility_date = "2025-01-01"
 compatibility_flags = ["nodejs_compat"]
 
-# KV namespace untuk state percakapan & cache
 [[kv_namespaces]]
 binding = "AEGIS_KV"
 id = "71cb7cf20b9848eb9209d99293dafe8f"
 
-# Cron triggers — schedule jobs
+# 1 cron tiap 10 menit — dispatch internal per slot waktu (workers free max 5 cron)
 [triggers]
-crons = [
-  "0 23 * * *",   # 06:00 WIB Morning brief (UTC-7)
-  "0 14 * * *",   # 21:00 WIB Evening recap
-  "0 16 * * *",   # 23:00 WIB Nightly distill + knowledge sync
-  "0 5 * * *",    # 12:00 WIB Anomaly scan
-  "0 20 * * *",   # 03:00 WIB Daily backup
-  "0 12 * * 0",   # Minggu 19:00 WIB Weekly reflect
-  "0 13 * * 0",   # Minggu 20:00 WIB Self-tune
-]
+crons = ["*/10 * * * *"]

@@ -1,47 +1,148 @@
-// Aegis Worker — entry point Cloudflare Workers
-// Webhook Telegram + Cron Triggers (semua scheduled jobs)
+// Aegis Worker — Cloudflare Workers entry (webhook + cron dispatcher).
 
-import { handleMessage, } from "./lib/brain.js";
+import { handleMessage } from "./lib/brain.js";
 import { sendMessage, answerCallback, editMessageReplyMarkup, getFileLink, fbKeyboard } from "./lib/telegram.js";
 import { resetState } from "./lib/state.js";
 import { listActive, removeReminder, dueReminders, markNotified } from "./lib/reminders.js";
-import { writeJSON, readJSON, writeFile, listFolder } from "./lib/store.js";
-import { nowJakarta, formatFriendly } from "./lib/time.js";
+import { writeJSON, readJSON } from "./lib/store.js";
+import { distill, distillText } from "./lib/distill.js";
+import { generateMorningBrief, generateEveningRecap } from "./lib/briefings.js";
+import { detectAnomalies } from "./lib/anomaly.js";
+import { dailySnapshot } from "./lib/backup.js";
+import { syncKnowledge } from "./lib/knowledge-sync.js";
+import { weeklyReflect } from "./lib/reflect.js";
+import { generateClaudeMdSuggestion, generateFeedbackDigest } from "./lib/self-update.js";
 import { aiCall } from "./lib/ai.js";
+import { nowJakarta, formatFriendly } from "./lib/time.js";
 
-// === Helpers ===
 const isOwner = (env, from) => String(from?.id) === String(env.TELEGRAM_CHAT_ID);
 
-const handleCommand = async (env, msg, cmd, args) => {
-  const chatId = msg.chat.id;
-  switch (cmd) {
-    case "start":
-      return sendMessage(env, chatId,
-        "✅ Aegis aktif. Chat saya apa pun — saya pahami konteksnya.\n\n" +
-        "Command:\n/list — reminder aktif\n/hapus <id> — hapus reminder\n" +
-        "/reset — bersihkan ingatan chat\n/ping — cek hidup");
-    case "ping":
-      return sendMessage(env, chatId, "pong");
-    case "reset":
-      await resetState(env, chatId);
-      return sendMessage(env, chatId, "🧹 Memori chat dibersihkan.");
-    case "list": {
-      const items = await listActive(env);
-      if (items.length === 0) return sendMessage(env, chatId, "📭 Tidak ada reminder aktif.");
-      const lines = items.map((r, i) => `${i + 1}. 📝 ${r.event}\n   📅 ${formatFriendly(r.datetime_iso)}\n   🔖 ${r.id}`);
-      return sendMessage(env, chatId, `📋 Reminder aktif (${items.length}):\n\n${lines.join("\n\n")}`);
-    }
-    case "hapus": {
-      const id = args.trim();
-      if (!id) return sendMessage(env, chatId, "Format: /hapus <id>");
-      const ok = await removeReminder(env, id);
-      return sendMessage(env, chatId, ok ? `🗑️ ${id} dihapus.` : `❌ ${id} tidak ditemukan.`);
-    }
-    default:
-      return null;
-  }
+// === Command handlers ===
+const COMMANDS = {
+  start: async (env, msg) =>
+    sendMessage(env, msg.chat.id,
+      "✅ Aegis aktif (Cloudflare Workers, gratis selamanya).\n\n" +
+      "Chat saja apa pun — saya paham konteksnya.\n\n" +
+      "Command:\n" +
+      "/list — reminder aktif\n" +
+      "/hapus <id> — hapus reminder\n" +
+      "/distill — proses inbox\n" +
+      "/sync_knowledge — sync 01-KNOWLEDGE\n" +
+      "/brief — morning brief\n" +
+      "/recap — evening recap\n" +
+      "/anomaly — scan anomali\n" +
+      "/backup — snapshot manual\n" +
+      "/refleksi — refleksi mingguan\n" +
+      "/tune — saran self-tuning\n" +
+      "/cari <topik> — scout web\n" +
+      "/reset — bersih ingatan chat\n" +
+      "/ping"),
+
+  ping: (env, msg) => sendMessage(env, msg.chat.id, "pong"),
+
+  reset: async (env, msg) => {
+    await resetState(env, msg.chat.id);
+    return sendMessage(env, msg.chat.id, "🧹 Memori chat dibersihkan.");
+  },
+
+  list: async (env, msg) => {
+    const items = await listActive(env);
+    if (items.length === 0) return sendMessage(env, msg.chat.id, "📭 Tidak ada reminder aktif.");
+    const lines = items.map((r, i) => `${i + 1}. 📝 ${r.event}\n   📅 ${formatFriendly(r.datetime_iso)}\n   🔖 ${r.id}`);
+    return sendMessage(env, msg.chat.id, `📋 Reminder aktif (${items.length}):\n\n${lines.join("\n\n")}`);
+  },
+
+  hapus: async (env, msg, args) => {
+    const id = args.trim();
+    if (!id) return sendMessage(env, msg.chat.id, "Format: /hapus <id>");
+    const ok = await removeReminder(env, id);
+    return sendMessage(env, msg.chat.id, ok ? `🗑️ ${id} dihapus.` : `❌ ${id} tidak ditemukan.`);
+  },
+
+  distill: async (env, msg) => {
+    await sendMessage(env, msg.chat.id, "🧠 Distill jalan...");
+    try {
+      const res = await distill(env);
+      if (res.processed === 0) return sendMessage(env, msg.chat.id, "📭 Inbox kosong.");
+      const t = res.totals;
+      return sendMessage(env, msg.chat.id,
+        `✅ Distill ${res.processed} catatan.\n👤 +${t.people} • 📦 +${t.projects} • 📅 +${t.events} • ⚖️ +${t.decisions} • 💡 +${t.beliefs}\n🗄️ ${res.archived.length} dipindah arsip.`);
+    } catch (err) { return sendMessage(env, msg.chat.id, `❌ ${err.message}`); }
+  },
+
+  sync_knowledge: async (env, msg) => {
+    await sendMessage(env, msg.chat.id, "📚 Sync knowledge...");
+    try {
+      const res = await syncKnowledge(env);
+      return sendMessage(env, msg.chat.id, `✅ ${res.files} file ter-update di 01-KNOWLEDGE/`);
+    } catch (err) { return sendMessage(env, msg.chat.id, `❌ ${err.message}`); }
+  },
+
+  brief: async (env, msg) => {
+    await sendMessage(env, msg.chat.id, "🌅 Bikin morning brief...");
+    try {
+      const b = await generateMorningBrief(env);
+      return sendMessage(env, msg.chat.id, b, { parse_mode: "Markdown", ...fbKeyboard("morning") });
+    } catch (err) { return sendMessage(env, msg.chat.id, `❌ ${err.message}`); }
+  },
+
+  recap: async (env, msg) => {
+    await sendMessage(env, msg.chat.id, "🌙 Bikin evening recap...");
+    try {
+      const r = await generateEveningRecap(env);
+      return sendMessage(env, msg.chat.id, r, { parse_mode: "Markdown", ...fbKeyboard("evening") });
+    } catch (err) { return sendMessage(env, msg.chat.id, `❌ ${err.message}`); }
+  },
+
+  anomaly: async (env, msg) => {
+    await sendMessage(env, msg.chat.id, "🔍 Scan anomali...");
+    try {
+      const res = await detectAnomalies(env);
+      if (!res.hasAnomaly) return sendMessage(env, msg.chat.id, "✅ Bersih, tidak ada anomali.");
+      return sendMessage(env, msg.chat.id, res.message, fbKeyboard("anomaly"));
+    } catch (err) { return sendMessage(env, msg.chat.id, `❌ ${err.message}`); }
+  },
+
+  backup: async (env, msg) => {
+    await sendMessage(env, msg.chat.id, "💾 Snapshot...");
+    try {
+      const res = await dailySnapshot(env);
+      return sendMessage(env, msg.chat.id, `✅ Snapshot ${res.date}: ${res.count} file di 06-ARCHIVE/backup/${res.date}/`);
+    } catch (err) { return sendMessage(env, msg.chat.id, `❌ ${err.message}`); }
+  },
+
+  refleksi: async (env, msg) => {
+    await sendMessage(env, msg.chat.id, "🪞 Bikin refleksi minggu ini...");
+    try {
+      const res = await weeklyReflect(env);
+      if (res.skipped) return sendMessage(env, msg.chat.id, `📭 ${res.reason}`);
+      return sendMessage(env, msg.chat.id, `📝 Refleksi → ${res.path}\n\n${res.snippet}`);
+    } catch (err) { return sendMessage(env, msg.chat.id, `❌ ${err.message}`); }
+  },
+
+  tune: async (env, msg) => {
+    await sendMessage(env, msg.chat.id, "🔧 Bikin saran self-tuning...");
+    try {
+      const [c, f] = await Promise.all([generateClaudeMdSuggestion(env), generateFeedbackDigest(env)]);
+      let m = `📝 CLAUDE.md saran → ${c.path}\n\n${c.snippet}`;
+      if (!f.skipped) m += `\n\n---\n\n📊 Feedback Digest → ${f.path}\n\n${f.snippet}`;
+      return sendMessage(env, msg.chat.id, m);
+    } catch (err) { return sendMessage(env, msg.chat.id, `❌ ${err.message}`); }
+  },
+
+  cari: async (env, msg, args) => {
+    const q = args.trim();
+    if (!q) return sendMessage(env, msg.chat.id, "Format: /cari <pertanyaan>");
+    await sendMessage(env, msg.chat.id, "🔎 Scout web...");
+    try {
+      const prompt = `Kamu Aegis. Hady minta info: "${q}". Pakai web search internalmu, jawab bahasa Indonesia sopan (panggil "Pak"), maks 5 kalimat.`;
+      const { content } = await aiCall(env, "senior", { prompt, temperature: 0.3, max_tokens: 500 });
+      return sendMessage(env, msg.chat.id, content || "Maaf Pak, tidak dapat hasil.", fbKeyboard("scout"));
+    } catch (err) { return sendMessage(env, msg.chat.id, `❌ ${err.message}`); }
+  },
 };
 
+// === Message handlers ===
 const handleText = async (env, msg) => {
   const text = msg.text.trim();
   if (!text) return;
@@ -65,7 +166,7 @@ const handleVoice = async (env, msg) => {
       headers: { Authorization: `Bearer ${env.GROQ_API_KEY}` },
       body: fd,
     });
-    if (!trRes.ok) throw new Error(`whisper ${trRes.status}: ${await trRes.text()}`);
+    if (!trRes.ok) throw new Error(`whisper ${trRes.status}`);
     const { text } = await trRes.json();
     if (!text || text.trim().length < 2) return sendMessage(env, msg.chat.id, "🤷 Tidak terdengar.");
     await sendMessage(env, msg.chat.id, `🎙️ _"${text}"_`, { parse_mode: "Markdown" });
@@ -78,26 +179,21 @@ const handleVoice = async (env, msg) => {
 
 const handleCallback = async (env, cb) => {
   const data = cb.data || "";
-  if (data.startsWith("fb:")) {
-    const [, rating, source] = data.split(":");
-    try {
-      const fbDoc = await readJSON(env, "07-SYSTEM/feedback.json", { items: [] });
-      fbDoc.items.push({
-        ts: nowJakarta().iso,
-        message_id: cb.message.message_id,
-        rating, source,
-      });
-      await writeJSON(env, "07-SYSTEM/feedback.json", fbDoc, `feedback: ${rating} on ${source}`);
-      await answerCallback(env, cb.id, rating === "up" ? "Makasih, Pak 👍" : "Catat, saya perbaiki.");
-      await editMessageReplyMarkup(env, cb.message.chat.id, cb.message.message_id, { inline_keyboard: [] });
-    } catch (err) {
-      await answerCallback(env, cb.id, "Gagal catat.");
-    }
+  if (!data.startsWith("fb:")) return;
+  const [, rating, source] = data.split(":");
+  try {
+    const fbDoc = await readJSON(env, "07-SYSTEM/feedback.json", { items: [] });
+    fbDoc.items.push({ ts: nowJakarta().iso, message_id: cb.message.message_id, rating, source });
+    await writeJSON(env, "07-SYSTEM/feedback.json", fbDoc, `feedback: ${rating} on ${source}`);
+    await answerCallback(env, cb.id, rating === "up" ? "Makasih, Pak 👍" : "Catat, saya perbaiki.");
+    await editMessageReplyMarkup(env, cb.message.chat.id, cb.message.message_id, { inline_keyboard: [] });
+  } catch (err) {
+    await answerCallback(env, cb.id, "Gagal catat.");
   }
 };
 
-// === Cron handlers ===
-const cronReminders = async (env) => {
+// === Cron dispatcher (1 cron tiap 10 menit, internal dispatch per slot) ===
+const cronReminderDispatch = async (env) => {
   const due = await dueReminders(env);
   if (due.length === 0) return;
   const ids = [];
@@ -110,32 +206,74 @@ const cronReminders = async (env) => {
   await markNotified(env, ids);
 };
 
-const cronMorningBrief = async (env) => {
-  const today = nowJakarta();
-  const reminders = await listActive(env);
-  const startUtc = new Date(Date.UTC(...today.date.split("-").map((x, i) => i === 1 ? +x - 1 : +x), -7, 0)).toISOString();
-  const endUtc = new Date(Date.UTC(...today.date.split("-").map((x, i) => i === 1 ? +x - 1 : +x), 16, 59)).toISOString();
-  const todayReminders = reminders.filter(r => r.datetime_iso >= startUtc && r.datetime_iso <= endUtc);
+const FIRED_KEY = "cron:fired";
+const wasFired = async (env, key) => (await env.AEGIS_KV.get(`${FIRED_KEY}:${key}`)) === "1";
+const markFired = (env, key, ttl = 60 * 60 * 23) => env.AEGIS_KV.put(`${FIRED_KEY}:${key}`, "1", { expirationTtl: ttl });
 
-  const prompt = `Kamu Aegis. Hari ini ${today.iso}. Tulis MORNING BRIEF singkat untuk Pak Hady.
+const runDailyJobs = async (env) => {
+  const n = nowJakarta();
+  const hh = n.iso.slice(11, 13);
+  const mm = n.iso.slice(14, 16);
+  const slot = `${n.date}-${hh}${mm}`;
 
-Jadwal hari ini:
-${todayReminders.length ? todayReminders.map(r => `- ${r.event} — ${formatFriendly(r.datetime_iso)}`).join("\n") : "(kosong)"}
-
-Format Markdown, max 200 kata: ## 🌅 Pagi, Pak Hady (sapaan singkat), ## 🎯 The One Thing, ## 📅 Hari Ini. Kalau jadwal kosong, kasih tahu santai.`;
-  const { content } = await aiCall(env, "reason", { prompt, temperature: 0.3, max_tokens: 500 });
-  await sendMessage(env, env.TELEGRAM_CHAT_ID, content, { parse_mode: "Markdown", ...fbKeyboard("morning") });
+  // 03:00 WIB - Backup
+  if (hh === "03" && mm === "00" && !(await wasFired(env, `backup-${n.date}`))) {
+    await dailySnapshot(env).catch(e => console.error("backup:", e.message));
+    await markFired(env, `backup-${n.date}`);
+  }
+  // 06:00 WIB - Morning brief
+  if (hh === "06" && mm === "00" && !(await wasFired(env, `brief-${n.date}`))) {
+    const b = await generateMorningBrief(env).catch(e => `Brief error: ${e.message}`);
+    await sendMessage(env, env.TELEGRAM_CHAT_ID, b, { parse_mode: "Markdown", ...fbKeyboard("morning") });
+    await markFired(env, `brief-${n.date}`);
+  }
+  // 12:00 WIB - Anomaly scan
+  if (hh === "12" && mm === "00" && !(await wasFired(env, `anomaly-${n.date}`))) {
+    const res = await detectAnomalies(env).catch(() => ({ hasAnomaly: false }));
+    if (res.hasAnomaly) await sendMessage(env, env.TELEGRAM_CHAT_ID, res.message, fbKeyboard("anomaly"));
+    await markFired(env, `anomaly-${n.date}`);
+  }
+  // 21:00 WIB - Evening recap
+  if (hh === "21" && mm === "00" && !(await wasFired(env, `recap-${n.date}`))) {
+    const r = await generateEveningRecap(env).catch(e => `Recap error: ${e.message}`);
+    await sendMessage(env, env.TELEGRAM_CHAT_ID, r, { parse_mode: "Markdown", ...fbKeyboard("evening") });
+    await markFired(env, `recap-${n.date}`);
+  }
+  // 23:00 WIB - Distill + sync knowledge
+  if (hh === "23" && mm === "00" && !(await wasFired(env, `distill-${n.date}`))) {
+    const res = await distill(env).catch(e => ({ processed: 0, totals: {}, archived: [], error: e.message }));
+    if (res.processed > 0) {
+      const t = res.totals;
+      await sendMessage(env, env.TELEGRAM_CHAT_ID,
+        `🌙 Distill malam: ${res.processed} catatan.\n👤 +${t.people || 0} • 📦 +${t.projects || 0} • 📅 +${t.events || 0}`);
+    }
+    await syncKnowledge(env).catch(e => console.error("knowledge sync:", e.message));
+    await markFired(env, `distill-${n.date}`);
+  }
+  // Sunday 19:00 WIB - Weekly reflect
+  const dow = new Date(n.isoOffset).getUTCDay() === 0 ? 0 : new Date(n.isoOffset).getDay(); // 0 = Sunday
+  if (dow === 0 && hh === "19" && mm === "00" && !(await wasFired(env, `reflect-${n.date}`))) {
+    const res = await weeklyReflect(env).catch(e => ({ skipped: true, reason: e.message }));
+    if (!res.skipped) await sendMessage(env, env.TELEGRAM_CHAT_ID, `🪞 Refleksi ${res.week}\n\n${res.snippet}`, fbKeyboard("reflect"));
+    await markFired(env, `reflect-${n.date}`);
+  }
+  // Sunday 20:00 WIB - Self-tune
+  if (dow === 0 && hh === "20" && mm === "00" && !(await wasFired(env, `tune-${n.date}`))) {
+    try {
+      const [c, f] = await Promise.all([generateClaudeMdSuggestion(env), generateFeedbackDigest(env)]);
+      await sendMessage(env, env.TELEGRAM_CHAT_ID, `🔧 Self-tune ${n.date}\nCLAUDE.md saran → ${c.path}\nFeedback digest → ${f.skipped ? "(skip)" : f.path}`);
+    } catch (err) { console.error("tune:", err.message); }
+    await markFired(env, `tune-${n.date}`);
+  }
 };
 
-// === Main fetch handler ===
+// === Worker entry ===
 export default {
   async fetch(req, env, ctx) {
     if (req.method !== "POST") return new Response("Aegis Worker alive", { status: 200 });
-
     let update;
     try { update = await req.json(); } catch { return new Response("bad json", { status: 400 }); }
 
-    // ack telegram fast — process in background
     ctx.waitUntil((async () => {
       try {
         if (update.callback_query) {
@@ -147,10 +285,11 @@ export default {
         if (!msg || !isOwner(env, msg.from)) return;
 
         if (msg.text?.startsWith("/")) {
-          const [cmd, ...rest] = msg.text.slice(1).split(/\s+/);
+          const [cmdRaw, ...rest] = msg.text.slice(1).split(/\s+/);
+          const cmd = cmdRaw.toLowerCase().split("@")[0]; // strip @botname
           const args = rest.join(" ");
-          const handled = await handleCommand(env, msg, cmd.toLowerCase(), args);
-          if (handled !== null) return;
+          const handler = COMMANDS[cmd];
+          if (handler) { await handler(env, msg, args); return; }
         }
         if (msg.text) return handleText(env, msg);
         if (msg.voice) return handleVoice(env, msg);
@@ -163,21 +302,12 @@ export default {
     return new Response("ok", { status: 200 });
   },
 
-  // === Cron Triggers ===
   async scheduled(event, env, ctx) {
     ctx.waitUntil((async () => {
-      const cron = event.cron;
       try {
-        if (cron === "0 23 * * *") await cronMorningBrief(env);          // 06:00 WIB
-        else if (cron === "0 14 * * *") {                                 // 21:00 WIB
-          // evening recap — basic version
-          await sendMessage(env, env.TELEGRAM_CHAT_ID, "🌙 (recap evening — TODO lengkap)");
-        }
-        // Reminder dispatch tiap 5 menit (kalau ada due)
-        await cronReminders(env);
-      } catch (err) {
-        console.error("[scheduled]", err);
-      }
+        await cronReminderDispatch(env);
+        await runDailyJobs(env);
+      } catch (err) { console.error("[scheduled]", err); }
     })());
   },
 };
