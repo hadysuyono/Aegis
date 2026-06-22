@@ -1,0 +1,14 @@
+{
+  "schema": "person",
+  "version": 1,
+  "people": [
+    {
+      "id": "person_d57f6b",
+      "name": "pemilik Aegis",
+      "first_seen": "2026-06-21",
+      "last_mentioned": "2026-06-21",
+      "notes": [],
+      "context": "kaitan dengan bisnis Hady"
+    }
+  ]
+}
