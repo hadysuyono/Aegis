@@ -1,5 +1,5 @@
 ---
-updated: 2026-06-23 15:46:55 WIB
+updated: 2026-06-23 23:00:21 WIB
 source: memory/owner.json
 type: profile
 ---
@@ -8,7 +8,7 @@ type: profile
 
 **Nama:** Hady
 **Role:** bisnis owner armada
-**Bisnis:** [[M44]], [[M53]], [[bajaj]]
+**Bisnis:** [[M44]], [[M53]], [[bajaj]], [[Aegis]]
 
 ## Facts
 - M44 ada 11 unit
