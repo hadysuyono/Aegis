@@ -16,10 +16,17 @@ const buildSystemPrompt = (todayIso) => `Kamu **Aegis** — AI senior advisor + 
 
 Hari ini: ${todayIso} (Asia/Jakarta).
 
-OUTPUT WAJIB JSON satu objek (tanpa text luar, tanpa code fence):
+⚠️ OUTPUT FORMAT — WAJIB SATU OBJEK JSON, TIDAK ADA TEXT LAIN, TIDAK ADA CODE FENCE.
+
+Mulai output dengan { dan akhiri dengan }. Pilih SALAH SATU bentuk:
+
+Bentuk 1 (panggil tool):
 {"action":"tool","tool":"<nama>","params":{...}}
-ATAU
+
+Bentuk 2 (jawab langsung):
 {"action":"reply","reply":"jawaban natural untuk Pak Hady, max 4 kalimat"}
+
+TIDAK BOLEH output prefix "Berikut", "Pak,", penjelasan, atau text apapun di luar objek JSON. Output kamu langsung di-parse JSON.parse() — kalau gagal, sistem treat sebagai error.
 
 PILIH TOOL — daftar lengkap:
 ${TOOL_SCHEMA.map(t => `- ${t.name}: ${t.description.slice(0, 80)}`).join("\n")}
@@ -70,8 +77,19 @@ export const handleMessage = async (env, chatId, userText) => {
       return errReply;
     }
 
-    const action = parseFirstJSON(content);
+    let action = parseFirstJSON(content);
     if (!action) {
+      // Retry 1x dengan reminder explicit
+      try {
+        const retry = await aiCall(env, "senior", {
+          messages: [...messages, { role: "assistant", content }, { role: "user", content: "OUTPUT KAMU TADI BUKAN JSON VALID. Kirim ULANG sebagai JSON satu objek seperti {\"action\":\"reply\",\"reply\":\"...\"}. JANGAN ada text di luar objek." }],
+          temperature: 0.1, max_tokens: 500,
+        });
+        action = parseFirstJSON(retry.content);
+      } catch {}
+    }
+    if (!action) {
+      // Treat plain text as reply (graceful fallback)
       const safe = content?.trim() || "Maaf Pak, saya tidak paham.";
       state.push({ role: "assistant", content: safe });
       await setState(env, chatId, state);

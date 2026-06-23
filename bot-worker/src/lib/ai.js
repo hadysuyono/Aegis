@@ -13,13 +13,13 @@ const PROVIDERS = {
 };
 
 const MODELS = {
-  // Chat brain (BUTUH JSON ketat) — compound dulu (reliable JSON), Z.AI cadangan
+  // Chat brain — GLM Flash primary (FREE forever, context besar), Groq cadangan
   senior: [
-    "groq/groq/compound",       // reliable JSON tool calling
+    "zai/glm-4.7-flash",        // FREE, context 128K
+    "zai/glm-4.5-flash",        // FREE
+    "groq/llama-3.3-70b-versatile",  // backup (TPM 12K, JSON OK)
+    "groq/groq/compound",       // last resort (RPD 250)
     "groq/groq/compound-mini",
-    "groq/llama-3.3-70b-versatile",
-    "zai/glm-4.7-flash",        // backup kalau compound habis
-    "zai/glm-4.5-flash",
   ],
   // Natural reply (brief/recap/anomaly) — Z.AI primary, hemat compound
   reply_natural: [
