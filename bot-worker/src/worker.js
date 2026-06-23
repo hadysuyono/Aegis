@@ -449,6 +449,11 @@ const runDailyJobs = async (env) => {
 export default {
   async fetch(req, env, ctx) {
     if (req.method !== "POST") return new Response("Aegis Worker alive", { status: 200 });
+    // Verify secret token dari Telegram (pencegah unset tanpa otorisasi)
+    if (env.WEBHOOK_SECRET) {
+      const got = req.headers.get("x-telegram-bot-api-secret-token");
+      if (got !== env.WEBHOOK_SECRET) return new Response("forbidden", { status: 403 });
+    }
     let update;
     try { update = await req.json(); } catch { return new Response("bad json", { status: 400 }); }
 
@@ -485,7 +490,6 @@ export default {
   async scheduled(event, env, ctx) {
     ctx.waitUntil((async () => {
       try {
-        await cronWebhookHealth(env);
         await cronReminderDispatch(env);
         await runDailyJobs(env);
       } catch (err) { console.error("[scheduled]", err); }
