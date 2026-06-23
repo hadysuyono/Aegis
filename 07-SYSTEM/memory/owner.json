@@ -3,7 +3,16 @@
   "version": 1,
   "name": "Hady",
   "role": "bisnis owner armada",
-  "businesses": ["M44", "M53", "bajaj"],
-  "context_facts": ["M44 ada 11 unit", "M53 ada 11 unit", "bajaj hanya operasional"],
+  "businesses": [
+    "M44",
+    "M53",
+    "bajaj",
+    "Aegis"
+  ],
+  "context_facts": [
+    "M44 ada 11 unit",
+    "M53 ada 11 unit",
+    "bajaj hanya operasional"
+  ],
   "last_updated": "2026-06-23"
 }
