@@ -54,6 +54,16 @@
           "llama-3.3-70b-versatile": 1
         }
       }
+    },
+    "2026-06-24": {
+      "senior": {
+        "calls": 1,
+        "prompt": 4079,
+        "completion": 445,
+        "by_model": {
+          "groq/compound": 1
+        }
+      }
     }
   }
 }
