@@ -10,19 +10,31 @@ const PROVIDERS = {
     url: "https://api.z.ai/api/paas/v4/chat/completions",
     keyEnv: "ZAI_API_KEY",
   },
+  openrouter: {
+    url: "https://openrouter.ai/api/v1/chat/completions",
+    keyEnv: "OPENROUTER_API_KEY",
+    extraHeaders: {
+      "HTTP-Referer": "https://aegis-bot.asuyhung.workers.dev",
+      "X-Title": "Aegis Bot",
+    },
+  },
 };
 
 const MODELS = {
   // Chat brain — Z.AI GLM Flash (FREE) primary, llama-70b backup (NO compound, sering 413)
-  // BRAIN ORCHESTRATOR — Z.AI Flash only (no Groq, biar Groq dipakai untuk job lain)
+  // BRAIN ORCHESTRATOR — Z.AI Flash primary, OpenRouter free fallback
   senior: [
     "zai/glm-4.7-flash",
     "zai/glm-4.5-flash",
+    "openrouter/meta-llama/llama-3.3-70b-instruct:free",
+    "openrouter/qwen/qwen-2.5-72b-instruct:free",
   ],
-  // REASONER — Z.AI Flash dulu (FREE, no Groq dulu — anti-413)
+  // REASONER — Z.AI Flash primary, OpenRouter free fallback
   reason: [
     "zai/glm-4.7-flash",
     "zai/glm-4.5-flash",
+    "openrouter/deepseek/deepseek-r1:free",
+    "openrouter/meta-llama/llama-3.3-70b-instruct:free",
   ],
   // Distill (JSON output)
   analyze: [
@@ -101,6 +113,7 @@ export const aiCall = async (env, role, { prompt, messages, temperature = 0.2, m
         headers: {
           Authorization: `Bearer ${apiKey}`,
           "Content-Type": "application/json",
+          ...(cfg.extraHeaders || {}),
         },
         body: JSON.stringify(body),
       });
