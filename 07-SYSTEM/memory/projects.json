@@ -27,10 +27,11 @@
       "id": "proj_2942bc",
       "name": "bajaj",
       "first_seen": "2026-06-21",
-      "last_mentioned": "2026-06-23",
+      "last_mentioned": "2026-06-24",
       "notes": [
         "hanya operasional saja",
-        "hutang karyawan"
+        "hutang karyawan",
+        "daftar hutang karyawan"
       ],
       "status": "aktif"
     },
