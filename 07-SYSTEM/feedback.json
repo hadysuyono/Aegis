@@ -102,6 +102,13 @@
       "rating": "up",
       "source": "brain",
       "model": null
+    },
+    {
+      "ts": "2026-06-24 02:33:08 WIB",
+      "message_id": 355,
+      "rating": "down",
+      "source": "brain",
+      "model": null
     }
   ]
 }
