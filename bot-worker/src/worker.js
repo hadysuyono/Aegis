@@ -1,6 +1,7 @@
 // Aegis Worker — Cloudflare Workers entry (webhook + cron dispatcher).
 
 import { handleMessage } from "./lib/brain.js";
+import { dispatch } from "./lib/tools.js";
 import { sendMessage, answerCallback, editMessageReplyMarkup, getFileLink, fbKeyboard } from "./lib/telegram.js";
 import { resetState } from "./lib/state.js";
 import { listActive, removeReminder, dueReminders, markNotified } from "./lib/reminders.js";
@@ -142,10 +143,42 @@ const COMMANDS = {
   },
 };
 
+// === Quick router — bypass brain untuk pattern jelas (anti 413 & lebih cepat) ===
+const IMAGE_PATTERN = /\b(bua?t(kan|in)?|bikin|generate|gambar(kan)?|lukis(kan)?|create|render|hasilkan)\b.*\b(gambar|image|foto|ilustrasi|logo|lukisan|wallpaper|background|art)\b/i;
+
+const quickRoute = async (env, chatId, text) => {
+  // Image generation
+  if (IMAGE_PATTERN.test(text)) {
+    await sendMessage(env, chatId, "🎨 Bikin gambar...");
+    const promptForFlux = await translatePromptToEnglish(env, text);
+    const result = await dispatch(env, "generate_image", { prompt: promptForFlux });
+    const parsed = JSON.parse(result);
+    if (parsed.ok) return true; // image sudah terkirim oleh dispatch
+    await sendMessage(env, chatId, `❌ Gagal bikin gambar: ${parsed.error}`);
+    return true;
+  }
+  return false;
+};
+
+// Helper: pakai AI ringan untuk extract prompt English buat Flux
+const translatePromptToEnglish = async (env, text) => {
+  try {
+    const { aiCall } = await import("./lib/ai.js");
+    const { content } = await aiCall(env, "fast", {
+      prompt: `Extract the image description from this user request and translate to a concise English prompt suitable for image generation. Output ONLY the English prompt, nothing else.\n\nRequest: "${text}"`,
+      temperature: 0.2, max_tokens: 200,
+    });
+    return content?.trim() || text;
+  } catch { return text; }
+};
+
 // === Message handlers ===
 const handleText = async (env, msg) => {
   const text = msg.text.trim();
   if (!text) return;
+  // Quick router dulu — handle pattern jelas tanpa brain
+  if (await quickRoute(env, msg.chat.id, text)) return;
+  // Sisanya ke brain
   const reply = await handleMessage(env, msg.chat.id, text);
   return sendMessage(env, msg.chat.id, reply, fbKeyboard("brain"));
 };
