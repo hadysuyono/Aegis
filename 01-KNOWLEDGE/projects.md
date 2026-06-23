@@ -1,19 +1,19 @@
 ---
-updated: 2026-06-22 23:00:48 WIB
+updated: 2026-06-23 15:46:57 WIB
 source: memory/projects.json
 type: projects
-count: 5
+count: 6
 ---
 
-# Projects (5)
+# Projects (6)
 
 ## [[M44]] 🟢 aktif
-- **First seen:** 2026-06-21 • **Last:** 2026-06-21
+- **First seen:** 2026-06-21 • **Last:** 2026-06-23
 - 11 unit
 - 11 Unit
 
 ## [[M53]] 🟢 aktif
-- **First seen:** 2026-06-21 • **Last:** 2026-06-21
+- **First seen:** 2026-06-21 • **Last:** 2026-06-23
 - 11 unit
 
 ## [[bajaj]] 🟢 aktif
@@ -25,4 +25,7 @@ count: 5
 
 ## [[kojang]] 🟢 aktif
 - **First seen:** 2026-06-21 • **Last:** 2026-06-21
+
+## [[km Aegis]] 🟢 aktif
+- **First seen:** 2026-06-23 • **Last:** 2026-06-23
 
