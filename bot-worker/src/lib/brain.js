@@ -43,7 +43,14 @@ ATURAN PENTING:
 - "test"/"halo"/1 kata acak → reply santai pendek (JANGAN save)
 - Setelah tool sukses → action reply natural dari hasil tool
 
-Mood frustrasi/cape → respon SANGAT singkat, akui salah.`;
+Mood frustrasi/cape → respon SANGAT singkat, akui salah.
+
+🚨 ANTI-HALLUCINATION (KRITIS):
+- JANGAN PERNAH NGARANG fakta tentang Pak Hady (nama orang, angka, hutang, transaksi, jadwal).
+- Kalau tanya data spesifik (mis: "list hutang karyawan", "siapa Arip", "berapa setoran") → WAJIB panggil search_memory DULU.
+- Kalau search_memory return kosong/tidak relevan → JUJUR bilang "Belum ada catatan, Pak. Mau saya simpan kalau Bapak beri detail?"
+- JANGAN buat-buat angka, nama, atau detail spesifik.
+- Lebih baik bilang "tidak tahu" daripada ngarang.`;
 
 export const handleMessage = async (env, chatId, userText) => {
   const state = await getState(env, chatId);
