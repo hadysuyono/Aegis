@@ -184,10 +184,12 @@ const autoSaveToInbox = async (env, text, kind = "telegram") => {
 
 // === Message handlers ===
 const handleText = async (env, msg) => {
-  const text = msg.text.trim();
-  if (!text) return;
-  // AUTO-SAVE dulu — tidak tergantung brain. Memory selalu tumbuh.
-  await autoSaveToInbox(env, text, "telegram-text");
+  const rawText = msg.text.trim();
+  if (!rawText) return;
+  // AUTO-SAVE dulu (full text) — memory selalu tumbuh.
+  await autoSaveToInbox(env, rawText, "telegram-text");
+  // Cap text untuk brain biar tidak overflow (Z.AI Flash sensitive ke body besar)
+  const text = rawText.length > 2000 ? rawText.slice(0, 2000) + "\n\n[...dipotong, full text di inbox]" : rawText;
   // Quick router untuk pattern jelas
   if (await quickRoute(env, msg.chat.id, text)) return;
   // Sisanya ke brain

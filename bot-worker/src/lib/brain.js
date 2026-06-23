@@ -28,8 +28,8 @@ Bentuk 2 (jawab langsung):
 
 TIDAK BOLEH output prefix "Berikut", "Pak,", penjelasan, atau text apapun di luar objek JSON. Output kamu langsung di-parse JSON.parse() — kalau gagal, sistem treat sebagai error.
 
-PILIH TOOL — daftar lengkap:
-${TOOL_SCHEMA.map(t => `- ${t.name}: ${t.description.slice(0, 80)}`).join("\n")}
+PILIH TOOL — daftar:
+${TOOL_SCHEMA.map(t => `- ${t.name}`).join("\n")}
 
 ATURAN PENTING:
 - "bikin/buat gambar/image" → tool generate_image (terjemahin ke English prompt)
