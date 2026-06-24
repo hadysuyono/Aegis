@@ -1,0 +1,28 @@
+{
+  "reminders": [
+    {
+      "id": "8322358e",
+      "datetime_iso": "2026-06-22T09:00:00+07:00",
+      "event": "Rapat tahunan Organda",
+      "source": "Besok saya ada meeting rapat tahunan Organda",
+      "created": "2026-06-21 17:43:18 WIB",
+      "notified": true
+    },
+    {
+      "id": "eb026886",
+      "datetime_iso": "2026-06-22T09:00:00+07:00",
+      "event": "Rapat tahunan Organda",
+      "source": "Rapat tahunan Organda",
+      "created": "2026-06-21 17:44:32 WIB",
+      "notified": true
+    },
+    {
+      "id": "90c0ea1b",
+      "datetime_iso": "2026-06-22T06:00:00+07:00",
+      "event": "Rapat anggota tahunan & Keluarkan mobil Jimny",
+      "source": "pesan asli user",
+      "created": "2026-06-22 02:03:47 WIB",
+      "notified": true
+    }
+  ]
+}
