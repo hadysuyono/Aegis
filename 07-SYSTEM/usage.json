@@ -99,6 +99,16 @@
           "openai/gpt-oss-120b": 2
         }
       }
+    },
+    "2026-06-26": {
+      "senior": {
+        "calls": 1,
+        "prompt": 3963,
+        "completion": 415,
+        "by_model": {
+          "groq/compound": 1
+        }
+      }
     }
   }
 }
