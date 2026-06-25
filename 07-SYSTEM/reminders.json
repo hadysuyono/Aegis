@@ -23,6 +23,14 @@
       "source": "pesan asli user",
       "created": "2026-06-22 02:03:47 WIB",
       "notified": true
+    },
+    {
+      "id": "1ea58ae5",
+      "datetime_iso": "2026-06-26T07:00:00+07:00",
+      "event": "rapat transjakarta aula GBK lantai 4 di transjakarta pusat",
+      "source": "Remainder saya jam 7 hari ini 26 June 2026 = rapat transjakarta aula GBK lantai 4 di transjakarta pusat",
+      "created": "2026-06-26 02:30:22 WIB",
+      "notified": false
     }
   ]
 }
