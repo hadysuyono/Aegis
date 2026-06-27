@@ -1,0 +1,36 @@
+{
+  "reminders": [
+    {
+      "id": "8322358e",
+      "datetime_iso": "2026-06-22T09:00:00+07:00",
+      "event": "Rapat tahunan Organda",
+      "source": "Besok saya ada meeting rapat tahunan Organda",
+      "created": "2026-06-21 17:43:18 WIB",
+      "notified": true
+    },
+    {
+      "id": "eb026886",
+      "datetime_iso": "2026-06-22T09:00:00+07:00",
+      "event": "Rapat tahunan Organda",
+      "source": "Rapat tahunan Organda",
+      "created": "2026-06-21 17:44:32 WIB",
+      "notified": true
+    },
+    {
+      "id": "90c0ea1b",
+      "datetime_iso": "2026-06-22T06:00:00+07:00",
+      "event": "Rapat anggota tahunan & Keluarkan mobil Jimny",
+      "source": "pesan asli user",
+      "created": "2026-06-22 02:03:47 WIB",
+      "notified": true
+    },
+    {
+      "id": "1ea58ae5",
+      "datetime_iso": "2026-06-26T07:00:00+07:00",
+      "event": "rapat transjakarta aula GBK lantai 4 di transjakarta pusat",
+      "source": "Remainder saya jam 7 hari ini 26 June 2026 = rapat transjakarta aula GBK lantai 4 di transjakarta pusat",
+      "created": "2026-06-26 02:30:22 WIB",
+      "notified": true
+    }
+  ]
+}
