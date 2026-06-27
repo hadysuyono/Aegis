@@ -1,0 +1,76 @@
+{
+  "schema": "project",
+  "version": 1,
+  "projects": [
+    {
+      "id": "proj_e30889",
+      "name": "M44",
+      "first_seen": "2026-06-21",
+      "last_mentioned": "2026-06-24",
+      "notes": [
+        "11 unit",
+        "11 Unit",
+        "nopol yang suka bensin kosong: B 2623 VT, B 1722 VT, B 2628 VT",
+        "B 2623 VT",
+        "B 1722 VT",
+        "B 2628 VT"
+      ],
+      "status": "aktif"
+    },
+    {
+      "id": "proj_3c544c",
+      "name": "M53",
+      "first_seen": "2026-06-21",
+      "last_mentioned": "2026-06-23",
+      "notes": [
+        "11 unit"
+      ],
+      "status": "aktif"
+    },
+    {
+      "id": "proj_2942bc",
+      "name": "bajaj",
+      "first_seen": "2026-06-21",
+      "last_mentioned": "2026-06-24",
+      "notes": [
+        "hanya operasional saja",
+        "hutang karyawan",
+        "daftar hutang karyawan",
+        "memiliki karyawan dengan hutang"
+      ],
+      "status": "aktif"
+    },
+    {
+      "id": "proj_6b4c98",
+      "name": "Aegis",
+      "first_seen": "2026-06-21",
+      "last_mentioned": "2026-06-24",
+      "notes": [],
+      "status": "aktif"
+    },
+    {
+      "id": "proj_886824",
+      "name": "kojang",
+      "first_seen": "2026-06-21",
+      "last_mentioned": "2026-06-21",
+      "notes": [],
+      "status": "aktif"
+    },
+    {
+      "id": "proj_w6iuoa",
+      "name": "km Aegis",
+      "first_seen": "2026-06-23",
+      "last_mentioned": "2026-06-23",
+      "notes": [],
+      "status": "aktif"
+    },
+    {
+      "id": "proj_7628f4",
+      "name": "hutang",
+      "first_seen": "2026-06-24",
+      "last_mentioned": "2026-06-24",
+      "notes": [],
+      "status": "aktif"
+    }
+  ]
+}
