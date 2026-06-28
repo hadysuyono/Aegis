@@ -4,6 +4,37 @@
 
 ---
 
+## 2026-06-29 (malam) — Setup Second Brain Obsidian
+
+**Achieved:**
+- Sepakat hirarki sistem: Claude (supervisor) → Obsidian → Aegis → Capital Sentinel + project lain
+- Bikin struktur second brain biar new chat Claude nyambung tanpa abu-abu:
+  - `04-AEGIS-OUTPUTS/claude-sessions/CURRENT-FOCUS.md` — topik aktif, open loops, pending decision
+  - `02-PROJECTS/` — 5 page (reguler-fleet, bajaj-fleet, 3s-smartsystem, capital-sentinel, aegis)
+  - Update `CLAUDE.md` vault: tambah section "URUTAN BACA TIAP NEW CHAT" + "Hirarki Sistem"
+- Commit `6f34de3` push ke `HadyAshlan/Aegis` ✅
+- Aturan baru: push WAJIB announce akun+folder dulu (Hady punya 2 akun GitHub, takut salah pilih)
+- Verified: GitHub free = unlimited private repo, aman free selamanya untuk 2 project Hady
+
+**Capital Sentinel Memory Design (BELUM eksekusi):**
+- Lokasi asli: `crypto_advisor/` di session Claude.ai (volatile path), source permanen di GitHub `hadysuyono/Capital_Sentinel`
+- Template existing: header + per coin (Harga/Sinyal/Skor/Status/Inti/Rezim/Posisi/Senior Advisor/Action Conf/Ensemble/Swing) + 4 tombol drill-down
+- Jadwal: 6x WIB 07/11/15/19/23/03 + alert 24/7 (scheduler/jobs.py:1087)
+- Memory sebagian sudah ada di Railway disk: `data/memory.py`, `daily_movement.json`, `calibration.json`, `history.json`
+- Yang BELUM: mirror ke Obsidian + narrative memory lintas-hari ("sudah 2 hari di angka X")
+- **Trigger eksekusi:** setelah winrate 60% + profit ≥ $20/bln (sambil top-up Anthropic API)
+
+**Decisions:**
+- Aegis tetap FREE selamanya (beda dari Capital Sentinel yang boleh bayar)
+- Push aturan: WAJIB announce dulu sebelum eksekusi
+- Memory architecture Capital Sentinel = tambah hook, BUKAN ubah template existing
+
+**Pending (besok):**
+- Hady putuskan: update vault dgn rancangan memory CS atau topik lain
+- AI privacy migration Aegis (Z.AI → Cloudflare Workers AI) belum dimulai
+
+---
+
 ## 2026-06-29 — Take-over Day 1
 
 **Achieved:**
