@@ -184,6 +184,47 @@ Skill dibangun **satu per satu**. Mulai: **Morning brief** + **1 project (regule
 
 ---
 
+## 🚪 URUTAN BACA TIAP NEW CHAT (WAJIB)
+
+> Hemat token 80%+ vs compact. Jangkar permanen Claude ke vault.
+
+**Urutan baca (5 file inti, ~5% token):**
+
+1. `CLAUDE.md` (file ini) — rules & constraint
+2. `04-AEGIS-OUTPUTS/claude-sessions/CURRENT-FOCUS.md` — topik aktif sekarang, open loops, pending decision
+3. `04-AEGIS-OUTPUTS/claude-sessions/STATE.md` — state Aegis Worker
+4. `04-AEGIS-OUTPUTS/claude-sessions/HISTORY.md` (tail 80 baris) — perubahan terakhir
+5. `02-PROJECTS/<project-aktif>.md` — sesuai topik (reguler-fleet / capital-sentinel / dll)
+
+**Kalau topik trading/Capital Sentinel:** tambah baca:
+- `08-PROJECT-FEEDS/capital-sentinel/STATE.md`
+- `08-PROJECT-FEEDS/capital-sentinel/HISTORY.md` (tail 50)
+
+**Kalau ada referensi `[[Hady]]` / profile pribadi:** tambah baca:
+- `01-KNOWLEDGE/profile.md`
+- `01-KNOWLEDGE/people.md`
+
+**Update tiap akhir sesi besar:**
+- `CURRENT-FOCUS.md` (topik aktif, open loops baru)
+- `HISTORY.md` (append entry baru)
+- `02-PROJECTS/<project>.md` (kalau ada decision/next action baru)
+
+---
+
+## 🔗 Hirarki Sistem (disepakati 2026-06-29)
+
+```
+Claude (saya, supervisor)
+    ↓ via Obsidian vault
+Aegis (second brain, FREE selamanya)
+    ↓
+Capital Sentinel (Railway, BOLEH bayar)
+    ↓ future: Anthropic API jadi head advisor trading
+[project lain ke depan]
+```
+
+---
+
 ## 📋 Checklist Sebelum Edit Apa Pun di Folder Ini
 
 - [ ] Baca section relevan di CLAUDE.md ini dulu.
