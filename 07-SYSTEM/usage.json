@@ -137,6 +137,16 @@
           "openai/gpt-oss-120b": 3
         }
       }
+    },
+    "2026-06-29": {
+      "reason": {
+        "calls": 1,
+        "prompt": 431,
+        "completion": 409,
+        "by_model": {
+          "openai/gpt-oss-120b": 1
+        }
+      }
     }
   }
 }
