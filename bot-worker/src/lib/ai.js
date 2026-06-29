@@ -29,35 +29,35 @@ const PROVIDERS = {
   },
 };
 
-// Distribusi cerdas — tiap role pakai provider yang paling cocok.
-// CF Workers AI primary untuk chat (FREE, no training, low latency).
+// Distribusi cerdas — pilih PROVIDER YANG PALING PATUH JSON-strict untuk tool calling,
+// CF Workers AI Llama bukan untuk decision-making (sering ngarang/skip tool).
 const MODELS = {
-  // Brain orchestrator — chat utama Hady
+  // Brain orchestrator — WAJIB JSON ketat (tool calling). Z.AI Flash terbukti patuh.
   senior: [
-    "cf/@cf/meta/llama-3.3-70b-instruct-fp8-fast", // primary: free, no training, fast
-    "zai/glm-4.7-flash",                             // backup quality
-    "openrouter/meta-llama/llama-3.3-70b-instruct:free",
+    "zai/glm-4.7-flash",                             // primary: JSON-strict reliable
+    "groq/llama-3.3-70b-versatile",                  // backup: support JSON mode
     "zai/glm-4.5-flash",
+    "openrouter/meta-llama/llama-3.3-70b-instruct:free",
   ],
-  // Reasoning panjang (analisis, perencanaan)
+  // Reasoning panjang (analisis, perencanaan) — JSON juga
   reason: [
-    "zai/glm-4.7-flash",                             // primary: long context
-    "cf/@cf/meta/llama-3.3-70b-instruct-fp8-fast",
+    "zai/glm-4.7-flash",
+    "groq/llama-3.3-70b-versatile",
     "openrouter/deepseek/deepseek-r1:free",
     "zai/glm-4.5-flash",
   ],
   // JSON output (distill, classification)
   analyze: [
-    "groq/llama-3.3-70b-versatile",                  // primary: cepat
-    "cf/@cf/meta/llama-3.3-70b-instruct-fp8-fast",
+    "groq/llama-3.3-70b-versatile",                  // primary: cepat, JSON-mode
     "zai/glm-4.7-flash",
     "openrouter/qwen/qwen-2.5-72b-instruct:free",
+    "groq/meta-llama/llama-4-scout-17b-16e-instruct",
   ],
-  // Klasifikasi cepat
+  // Klasifikasi cepat — text simple, CF Workers AI cocok di sini
   fast: [
     "groq/llama-3.1-8b-instant",                     // primary: super cepat
-    "cf/@cf/meta/llama-3.1-8b-instruct",
     "zai/glm-4.5-flash",
+    "cf/@cf/meta/llama-3.1-8b-instruct",             // CF here OK (output simple)
   ],
 };
 
