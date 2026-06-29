@@ -462,6 +462,16 @@ export default {
         const after = await fetch(`https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/getWebhookInfo`).then(r => r.json()).catch(e => ({ error: e.message }));
         return new Response(JSON.stringify({ before: info, after }, null, 2), { headers: { "Content-Type": "application/json" } });
       }
+      if (url.pathname === "/debug-grounding") {
+        // Bukti Aegis baca vault — return persis apa yang di-inject ke AI
+        const { buildGrounding } = await import("./lib/grounding.js");
+        const q = url.searchParams.get("q") || "siapa saja karyawan saya";
+        const grounding = await buildGrounding(env, q).catch(e => `ERROR: ${e.message}`);
+        return new Response(
+          `=== DEBUG GROUNDING ===\n\nQuery: "${q}"\n\nWorker reads from: GitHub ${env.GITHUB_OWNER}/${env.GITHUB_REPO}@${env.GITHUB_BRANCH || "main"}\n\n--- GROUNDING OUTPUT (yang di-inject ke AI) ---\n${grounding}\n\n--- END ---\n\nSize: ${grounding.length} chars (~${Math.round(grounding.length/4)} tokens)`,
+          { headers: { "Content-Type": "text/plain; charset=utf-8" } }
+        );
+      }
       return new Response("Aegis Worker alive", { status: 200 });
     }
     // Verify secret token dari Telegram (pencegah unset tanpa otorisasi)
