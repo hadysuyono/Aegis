@@ -59,41 +59,9 @@ const splitModel = (full) => {
 const isRateLimit = (status, text) =>
   status === 429 || /rate.?limit|too many|quota/i.test(text || "");
 
-// Reset compound: UTC midnight → 07:00 WIB. Kalkulasi countdown.
-const nextResetWIB = () => {
-  const now = new Date();
-  const utcMidnight = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1));
-  const wibReset = new Date(utcMidnight.getTime() + 7 * 3600_000);
-  const diffMin = Math.round((utcMidnight - now) / 60_000);
-  return {
-    hours: Math.floor(diffMin / 60),
-    mins: diffMin % 60,
-    resetStr: wibReset.toLocaleString("id-ID", { timeZone: "Asia/Jakarta", hour: "2-digit", minute: "2-digit", day: "numeric", month: "short" }),
-  };
-};
-
-const QUOTA_ALERT_KEY = "alert:compound-exhausted";
-
-const notifyQuotaExhausted = async (env) => {
-  try {
-    const already = await env.AEGIS_KV.get(QUOTA_ALERT_KEY);
-    if (already) return; // sudah notif hari ini
-    const { resetStr, hours, mins } = nextResetWIB();
-    const text = `🚫 Compound (otak utama Aegis) limit habis. Sementara saya pakai model fallback.\n🕐 Reset: ${resetStr} WIB (${hours}j ${mins}m lagi)`;
-    await fetch(`https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
-      method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ chat_id: env.TELEGRAM_CHAT_ID, text }),
-    });
-    // TTL = sampai end of day UTC + buffer kecil
-    const ttl = Math.max(60, Math.round((new Date(Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), new Date().getUTCDate() + 1)) - Date.now()) / 1000));
-    await env.AEGIS_KV.put(QUOTA_ALERT_KEY, "1", { expirationTtl: ttl });
-  } catch (e) { console.warn("[quota notify]", e.message); }
-};
-
 export const aiCall = async (env, role, { prompt, messages, temperature = 0.2, max_tokens = 400, json = false }) => {
   const list = MODELS[role] || MODELS.fast;
   let lastErr = "";
-  let compoundExhausted = false;
   for (const full of list) {
     const { provider, model } = splitModel(full);
     const cfg = PROVIDERS[provider];
@@ -128,14 +96,12 @@ export const aiCall = async (env, role, { prompt, messages, temperature = 0.2, m
       const errText = await res.text();
       lastErr = `${full}: ${res.status} ${errText}`;
       if (!isRateLimit(res.status, errText)) throw new Error(lastErr);
-      if (role === "senior" && /compound/i.test(model)) compoundExhausted = true;
       console.warn(`[ai] ${role}/${full} rate-limit → fallback`);
     } catch (err) {
       lastErr = err.message;
       if (!/rate|429|quota/i.test(err.message)) throw err;
     }
   }
-  if (role === "senior" && compoundExhausted) await notifyQuotaExhausted(env);
   throw new Error(`No model available for ${role}: ${lastErr}`);
 };
 
