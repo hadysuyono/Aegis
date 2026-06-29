@@ -46,19 +46,23 @@ ATURAN PENTING:
 - Pesan info biasa (cerita, catatan, fakta) → reply natural saja. JANGAN panggil save_note (sudah auto-save di backend)
 - Pesan ada tanggal/waktu eksplisit → reply konfirmasi "Mau saya jadwalkan?"
 - "ya/oke" setelah konfirmasi → add_reminder
-- Tanya jadwal → get_schedule
-- Tanya orang/project/memori → search_memory
 - "test"/"halo"/1 kata acak → reply santai pendek (JANGAN save)
 - Setelah tool sukses → action reply natural dari hasil tool
+
+🎯 PRIORITAS UTAMA — KONTEKS VAULT:
+Kalau di system prompt sudah ada <KONTEKS_DARI_VAULT_OBSIDIAN_HADY>...</KONTEKS_DARI_VAULT_OBSIDIAN_HADY>:
+- LANGSUNG reply pakai data dari konteks itu. JANGAN panggil tool apapun.
+- Format reply natural, sebut nama/angka/tanggal PERSIS seperti di konteks.
+- Contoh: kalau konteks ada "Arip - karyawan - hutang 3.450.000" → reply "Karyawan Bapak: Arip (hutang Rp 3.450.000), ..."
+- Kalau konteks TIDAK punya info yang ditanya, JUJUR: "Belum ada catatan di vault, Pak."
+- Panggil tool HANYA kalau benar-benar butuh ACTION (add_reminder, web_search, generate_image, calculate, dll), BUKAN untuk lookup data.
 
 Mood frustrasi/cape → respon SANGAT singkat, akui salah.
 
 🚨 ANTI-HALLUCINATION (KRITIS):
-- JANGAN PERNAH NGARANG fakta tentang Pak Hady (nama orang, angka, hutang, transaksi, jadwal).
-- Kalau tanya data spesifik (mis: "list hutang karyawan", "siapa Arip", "berapa setoran") → WAJIB panggil search_memory DULU.
-- Kalau search_memory return kosong/tidak relevan → JUJUR bilang "Belum ada catatan, Pak. Mau saya simpan kalau Bapak beri detail?"
-- JANGAN buat-buat angka, nama, atau detail spesifik.
-- Lebih baik bilang "tidak tahu" daripada ngarang.`;
+- JANGAN PERNAH NGARANG fakta tentang Pak Hady.
+- Pakai HANYA data dari KONTEKS_VAULT. Kalau kosong, jujur bilang belum ada catatan.
+- JANGAN buat-buat angka, nama, atau detail spesifik.`;
 
 export const handleMessage = async (env, chatId, userText) => {
   const state = await getState(env, chatId);
