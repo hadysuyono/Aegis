@@ -4,6 +4,7 @@ import { aiCall, parseFirstJSON } from "./ai.js";
 import { TOOL_SCHEMA, dispatch } from "./tools.js";
 import { getState, setState } from "./state.js";
 import { nowJakarta } from "./time.js";
+import { buildGrounding } from "./grounding.js";
 
 const STATE_MAX = 8;
 const states = new Map();
@@ -63,7 +64,14 @@ export const handleMessage = async (env, chatId, userText) => {
   const state = await getState(env, chatId);
   state.push({ role: "user", content: userText });
   const { iso } = nowJakarta();
-  let messages = [{ role: "system", content: buildSystemPrompt(iso) }, ...state];
+  // DATA-FIRST: tarik konteks vault Obsidian DULU sebelum AI dipanggil.
+  // AI dapat fakta lengkap → tidak boleh ngarang.
+  const grounding = await buildGrounding(env, userText).catch(e => {
+    console.warn("[grounding] gagal:", e.message);
+    return "";
+  });
+  const sysContent = buildSystemPrompt(iso) + grounding;
+  let messages = [{ role: "system", content: sysContent }, ...state];
 
   for (let turn = 0; turn < 3; turn++) {
     let content;
