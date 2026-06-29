@@ -104,24 +104,28 @@ export const handleMessage = async (env, chatId, userText) => {
       return safe;
     }
 
-    if (action.action === "reply") {
-      const reply = action.reply || "Maaf Pak, ada masalah merangkai jawaban.";
-      state.push({ role: "assistant", content: reply });
-      await setState(env, chatId, state);
-      return reply;
-    }
-
+    // Tool calling — wajib ada action.tool
     if (action.action === "tool" && action.tool) {
       const result = await dispatch(env, action.tool, action.params || {});
       messages.push({ role: "assistant", content });
-      messages.push({ role: "user", content: `[Hasil tool "${action.tool}"]: ${result.slice(0, 1500)}\n\nKompose JSON action berikutnya — biasanya action: reply natural dari hasil tool.` });
+      messages.push({ role: "user", content: `[Hasil tool "${action.tool}"]: ${result.slice(0, 1500)}\n\nKompose JSON action berikutnya — biasanya {"action":"reply","reply":"..."} natural dari hasil tool.` });
       continue;
     }
 
-    const fallback = "Maaf Pak, saya bingung. Coba ulangi.";
-    state.push({ role: "assistant", content: fallback });
+    // Reply path — terima berbagai bentuk biar tidak fragile.
+    // Yang penting ada teks jawaban — ambil dari field manapun yang ada.
+    const replyText = action.reply || action.answer || action.message || action.text || action.content;
+    if (typeof replyText === "string" && replyText.trim()) {
+      state.push({ role: "assistant", content: replyText.trim() });
+      await setState(env, chatId, state);
+      return replyText.trim();
+    }
+
+    // JSON valid tapi tidak ada teks yang bisa dipakai → fallback ke raw content
+    const safe = content?.trim() || "Maaf Pak, saya bingung. Coba ulangi.";
+    state.push({ role: "assistant", content: safe });
     await setState(env, chatId, state);
-    return fallback;
+    return safe;
   }
 
   const overflow = "Maaf Pak, pertanyaan ini perlu waktu lebih. Coba lagi sebentar.";
