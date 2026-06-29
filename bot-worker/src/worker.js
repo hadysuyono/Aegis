@@ -450,7 +450,16 @@ const runDailyJobs = async (env) => {
 // === Worker entry ===
 export default {
   async fetch(req, env, ctx) {
-    if (req.method !== "POST") return new Response("Aegis Worker alive", { status: 200 });
+    if (req.method !== "POST") {
+      const url = new URL(req.url);
+      if (url.pathname === "/setup-webhook") {
+        const info = await fetch(`https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/getWebhookInfo`).then(r => r.json()).catch(e => ({ error: e.message }));
+        await cronWebhookHealth(env);
+        const after = await fetch(`https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/getWebhookInfo`).then(r => r.json()).catch(e => ({ error: e.message }));
+        return new Response(JSON.stringify({ before: info, after }, null, 2), { headers: { "Content-Type": "application/json" } });
+      }
+      return new Response("Aegis Worker alive", { status: 200 });
+    }
     // Verify secret token dari Telegram (pencegah unset tanpa otorisasi)
     if (env.WEBHOOK_SECRET) {
       const got = req.headers.get("x-telegram-bot-api-secret-token");
@@ -492,6 +501,7 @@ export default {
   async scheduled(event, env, ctx) {
     ctx.waitUntil((async () => {
       try {
+        await cronWebhookHealth(env);
         await cronReminderDispatch(env);
         await runDailyJobs(env);
       } catch (err) { console.error("[scheduled]", err); }
