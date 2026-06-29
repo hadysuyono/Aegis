@@ -86,7 +86,7 @@ const callCfWorkersAI = async (env, model, { messages, prompt, temperature, max_
     max_tokens,
   };
   const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), 8000);
+  const timer = setTimeout(() => ctrl.abort(), 15000);
   try {
     const data = await env.AI.run(model, input);
     return { content: (data.response || data.result?.response || "").trim() };
@@ -96,7 +96,7 @@ const callCfWorkersAI = async (env, model, { messages, prompt, temperature, max_
 // HTTP provider (Groq/Z.AI/OpenRouter): OpenAI-compatible chat completions.
 const callHttp = async (cfg, apiKey, body) => {
   const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), 8000);
+  const timer = setTimeout(() => ctrl.abort(), 15000);
   try {
     const res = await fetch(cfg.url, {
       method: "POST",
