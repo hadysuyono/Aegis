@@ -93,7 +93,7 @@ Bot kirim Daily Health Digest setiap **22:00 WIB**.
 
 - Worker URL: https://aegis-bot.asuyhung.workers.dev
 - Debug: `/debug-grounding?q=test` di browser
-- Vault repo: `github.com/HadyAshlan/Aegis`
+- Vault repo: `github.com/hadysuyono/Aegis`
 
 ---
 

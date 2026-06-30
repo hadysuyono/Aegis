@@ -10,7 +10,7 @@
 ## 🎯 Project
 
 - **Aegis** = personal intelligence system untuk [[Hady]] (mirip Jarvis)
-- Repo: `github.com/HadyAshlan/Aegis` (private)
+- Repo: `github.com/hadysuyono/Aegis` (private)
 - Deploy: **Cloudflare Workers** (FREE forever, NOT Railway)
 - Email infra: `asuyhung@gmail.com`
 - Vault local: `C:\Users\HP\Project Aegis\`

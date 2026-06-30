@@ -16,7 +16,7 @@ status: PRINSIP TETAP
 
 ### 1. Obsidian = SUMBER KEBENARAN TUNGGAL
 - Semua memory, decision, fakta, riwayat → tersimpan di Obsidian vault (`C:\Users\HP\Project Aegis\`)
-- Mirror permanen: GitHub `HadyAshlan/Aegis`
+- Mirror permanen: GitHub `hadysuyono/Aegis`
 - Bukan database lain. Bukan localStorage. Bukan code hardcoded.
 
 ### 2. AI = NARATOR DATA, BUKAN OTAK PEMUTUS
@@ -55,7 +55,7 @@ status: PRINSIP TETAP
 - Layer 1 = MURNI math (rumus tidak bohong, AI bisa dilusi)
 - Layer 2 = riset narrative (TIDAK ubah signal Layer 1, cuma kasih konteks)
 - Layer 3 = decision support (gabung semua → advice presisi)
-- Akun terpisah: bot di `hadysuyono/Capital_Sentinel`, brain di `HadyAshlan/Aegis`
+- Akun terpisah: bot di `hadysuyono/Capital_Sentinel`, brain di `hadysuyono/Aegis`
 
 ### 🔥 ATURAN UTAMA: HEMAT TOKEN (Hady 30 Jun 2026)
 

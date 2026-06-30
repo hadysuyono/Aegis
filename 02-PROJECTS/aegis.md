@@ -44,7 +44,7 @@ Vault sync      : Obsidian Git plugin (auto-pull 5m, push 10m)
 ## 📁 Lokasi
 
 - **Vault local:** `C:\Users\HP\Project Aegis\`
-- **Repo:** `github.com/HadyAshlan/Aegis` (private)
+- **Repo:** `github.com/hadysuyono/Aegis` (private)
 - **Deploy:** Cloudflare Workers
 - **Email infra:** `asuyhung@gmail.com`
 - **Project rules:** `CLAUDE.md` di root vault

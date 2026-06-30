@@ -38,7 +38,7 @@ Hady tegaskan visi: "AI WAJIB tarik data Obsidian DULU sebelum jawab. AI bukan o
 - brain.js graceful reply parsing: terima reply/answer/message/text/content
 
 **Bukti data flow (via /debug-grounding?q=siapa+karyawan):**
-- ✅ Worker reads from GitHub HadyAshlan/Aegis@main
+- ✅ Worker reads from GitHub hadysuyono/Aegis@main
 - ✅ owner.json loaded (Hady, M44/M53/bajaj/Aegis)
 - ✅ reminders.json loaded (30 Juni 07:00 Keselamatan berkendara)
 - ✅ people.json loaded (Arip hutang 3.450.000, Bembeng 1.000.000, Isa 500.000)
@@ -67,7 +67,7 @@ Hady tegaskan visi: "AI WAJIB tarik data Obsidian DULU sebelum jawab. AI bukan o
   - `04-AEGIS-OUTPUTS/claude-sessions/CURRENT-FOCUS.md` — topik aktif, open loops, pending decision
   - `02-PROJECTS/` — 5 page (reguler-fleet, bajaj-fleet, 3s-smartsystem, capital-sentinel, aegis)
   - Update `CLAUDE.md` vault: tambah section "URUTAN BACA TIAP NEW CHAT" + "Hirarki Sistem"
-- Commit `6f34de3` push ke `HadyAshlan/Aegis` ✅
+- Commit `6f34de3` push ke `hadysuyono/Aegis` ✅
 - Aturan baru: push WAJIB announce akun+folder dulu (Hady punya 2 akun GitHub, takut salah pilih)
 - Verified: GitHub free = unlimited private repo, aman free selamanya untuk 2 project Hady
 

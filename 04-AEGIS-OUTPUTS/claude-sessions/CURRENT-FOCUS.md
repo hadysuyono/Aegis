@@ -25,7 +25,7 @@ Capital Sentinel (Railway, BOLEH bayar)
 ## 🔐 Aturan Push (mulai 2026-06-29)
 
 Tiap mau `git push`, saya WAJIB announce dulu (akun + folder). Akun mapping:
-- `HadyAshlan/Aegis` — folder `C:\Users\HP\Project Aegis\`
+- `hadysuyono/Aegis` — folder `C:\Users\HP\Project Aegis\`
 - `hadysuyono/Capital_Sentinel` — folder Capital Sentinel di session Claude.ai
 
 ## 🟢 Decision Penting Sesi 30 Juni 2026
