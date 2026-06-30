@@ -32,19 +32,20 @@ const PROVIDERS = {
 // Distribusi cerdas — pilih PROVIDER YANG PALING PATUH JSON-strict untuk tool calling,
 // CF Workers AI Llama bukan untuk decision-making (sering ngarang/skip tool).
 const MODELS = {
-  // Brain orchestrator — WAJIB JSON ketat (tool calling). Z.AI Flash terbukti patuh.
+  // Brain orchestrator — Groq PRIMARY (paling cepat & reliable utk JSON).
+  // Z.AI sering abort/lambat utk prompt grounding besar.
   senior: [
-    "zai/glm-4.7-flash",                             // primary: JSON-strict reliable
-    "groq/llama-3.3-70b-versatile",                  // backup: support JSON mode
-    "zai/glm-4.5-flash",
+    "groq/llama-3.3-70b-versatile",                  // primary: ULTRA FAST (~1-2s), JSON-mode support
+    "zai/glm-4.7-flash",                             // backup: long context kalau Groq rate-limit
+    "groq/meta-llama/llama-4-scout-17b-16e-instruct",
     "openrouter/meta-llama/llama-3.3-70b-instruct:free",
   ],
-  // Reasoning panjang (analisis, perencanaan) — JSON juga
+  // Reasoning panjang (analisis, perencanaan)
   reason: [
-    "zai/glm-4.7-flash",
-    "groq/llama-3.3-70b-versatile",
-    "openrouter/deepseek/deepseek-r1:free",
-    "zai/glm-4.5-flash",
+    "groq/llama-3.3-70b-versatile",                  // primary: fast
+    "zai/glm-4.7-flash",                             // backup
+    "openrouter/deepseek/deepseek-r1:free",          // alt: deep reasoning
+    "groq/meta-llama/llama-4-scout-17b-16e-instruct",
   ],
   // JSON output (distill, classification)
   analyze: [
