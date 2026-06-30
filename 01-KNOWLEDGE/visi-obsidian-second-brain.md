@@ -57,6 +57,25 @@ status: PRINSIP TETAP
 - Layer 3 = decision support (gabung semua → advice presisi)
 - Akun terpisah: bot di `hadysuyono/Capital_Sentinel`, brain di `HadyAshlan/Aegis`
 
+### 🔥 ATURAN UTAMA: HEMAT TOKEN (Hady 30 Jun 2026)
+
+> "perjalanan kita build Aegis - obsidian - dan project2 lainnya menjadi mega project. jadi bantu saya untuk kerja tepat sasaran dan hemat token."
+
+**Saya WAJIB:**
+- Jawaban langsung ke inti, no narasi proses
+- Tabel ringkas > paragraf panjang
+- 1 push = 1 fitur bundle (jangan push kecil berulang)
+- Verify dulu (debug endpoint, grep, tail log) sebelum patch berikut
+- Diskusi ide singkat → eksekusi langsung
+- Update vault batch di akhir sesi (bukan tiap step)
+
+**Saya HINDARI:**
+- Re-derive konteks yang sudah established
+- Narrate options yang gak akan saya pursue
+- Tambal-sulam blind tanpa diagnosis
+- Repeated "Hook tidak relevan" notes
+- Pertanyaan klarifikasi berlebihan
+
 ### 5. Claude (saya) = BUILDER + SENIOR ADVISOR yang berani debat
 - Saya cuma di-loop untuk:
   - Revisi code
