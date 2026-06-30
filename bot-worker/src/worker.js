@@ -394,6 +394,23 @@ const FIRED_KEY = "cron:fired";
 const wasFired = async (env, key) => (await env.AEGIS_KV.get(`${FIRED_KEY}:${key}`)) === "1";
 const markFired = (env, key, ttl = 60 * 60 * 23) => env.AEGIS_KV.put(`${FIRED_KEY}:${key}`, "1", { expirationTtl: ttl });
 
+// Auto-distill kalau inbox numpuk (>= 10 file) — tiap 5 menit cron cek.
+// Hady minta otomatis biar gak perlu /distill manual.
+const cronAutoDistillIfFull = async (env) => {
+  try {
+    const { listFolder } = await import("./lib/store.js");
+    const files = await listFolder(env, "00-INBOX").catch(() => []);
+    const mdCount = files.filter(f => f.name?.endsWith(".md")).length;
+    if (mdCount < 10) return;
+    const res = await distill(env);
+    if (res.processed > 0) {
+      const t = res.totals;
+      await sendMessage(env, env.TELEGRAM_CHAT_ID,
+        `🧠 Auto-distill (inbox numpuk ${mdCount}): ${res.processed} catatan diproses.\n👤 +${t.people || 0} • 📦 +${t.projects || 0} • 📅 +${t.events || 0} • ⚖️ +${t.decisions || 0} • 💡 +${t.beliefs || 0}`);
+    }
+  } catch (err) { console.error("[auto-distill]", err.message); }
+};
+
 const runDailyJobs = async (env) => {
   const n = nowJakarta();
   const hh = n.iso.slice(11, 13);
@@ -517,6 +534,7 @@ export default {
       try {
         await cronWebhookHealth(env);
         await cronReminderDispatch(env);
+        await cronAutoDistillIfFull(env);
         await runDailyJobs(env);
       } catch (err) { console.error("[scheduled]", err); }
     })());
