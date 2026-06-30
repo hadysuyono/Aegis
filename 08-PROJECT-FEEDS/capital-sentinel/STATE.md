@@ -3,6 +3,19 @@
 > Jangkar untuk Claude tiap new chat sesi Capital Sentinel.
 > Ganti compact (~70% token) → baca file ini (~3-5%).
 
+---
+
+## 🧠 SECOND BRAIN — BACA DULU TIAP NEW CHAT
+
+**Vault Hady (sumber kebenaran tunggal):**
+- `C:\Users\HP\Project Aegis\01-KNOWLEDGE\visi-obsidian-second-brain.md` — ⭐ VISI PRINSIP
+- `C:\Users\HP\Project Aegis\02-PROJECTS\capital-sentinel.md` — status, roadmap, decisions
+- `C:\Users\HP\Project Aegis\04-AEGIS-OUTPUTS\claude-sessions\CURRENT-FOCUS.md` — topik aktif
+
+**Visi terkait CS spesifik:** nantinya CS pakai vault sebagai second brain agar daily report bukan template kering tapi punya konteks historical ("sudah 2 hari di angka X, RSI konsisten 42-44"). Trigger eksekusi: winrate 60% + profit ≥ $20/bln (top-up Anthropic API).
+
+---
+
 **Last updated:** 2026-06-29
 
 ---
