@@ -395,7 +395,8 @@ const wasFired = async (env, key) => (await env.AEGIS_KV.get(`${FIRED_KEY}:${key
 const markFired = (env, key, ttl = 60 * 60 * 23) => env.AEGIS_KV.put(`${FIRED_KEY}:${key}`, "1", { expirationTtl: ttl });
 
 // Auto-distill kalau inbox numpuk (>= 10 file) — tiap 5 menit cron cek.
-// Hady minta otomatis biar gak perlu /distill manual.
+// Setelah distill, langsung auto-sync knowledge (01-KNOWLEDGE/*.md update).
+// Hady: "obsidian itu independen, Aegis jenius via obsidian"
 const cronAutoDistillIfFull = async (env) => {
   try {
     const { listFolder } = await import("./lib/store.js");
@@ -404,11 +405,52 @@ const cronAutoDistillIfFull = async (env) => {
     if (mdCount < 10) return;
     const res = await distill(env);
     if (res.processed > 0) {
+      // Sync knowledge langsung — 01-KNOWLEDGE/*.md update tanpa nunggu 23:00
+      await syncKnowledge(env).catch(e => console.error("auto-sync-knowledge:", e.message));
       const t = res.totals;
       await sendMessage(env, env.TELEGRAM_CHAT_ID,
-        `🧠 Auto-distill (inbox numpuk ${mdCount}): ${res.processed} catatan diproses.\n👤 +${t.people || 0} • 📦 +${t.projects || 0} • 📅 +${t.events || 0} • ⚖️ +${t.decisions || 0} • 💡 +${t.beliefs || 0}`);
+        `🧠 Auto-distill (${mdCount} → ${res.processed} catatan).\n👤 +${t.people || 0} • 📦 +${t.projects || 0} • 📅 +${t.events || 0} • ⚖️ +${t.decisions || 0} • 💡 +${t.beliefs || 0}\n📚 Knowledge synced.`);
     }
   } catch (err) { console.error("[auto-distill]", err.message); }
+};
+
+// Self-monitor + auto-recover. Tiap 5 menit cek kesehatan critical paths.
+// Hady: "obsidian harus independen, gak mengandalkan command dari chat".
+const HEALTH_KEY = "health:last-check";
+const HEALTH_ALERT_KEY = "health:last-alert"; // anti-spam: max 1 alert/jam per masalah
+const cronHealthMonitor = async (env) => {
+  const issues = [];
+  // 1. Webhook check (sudah dihandle cronWebhookHealth, ini double-check)
+  try {
+    const info = await fetch(`https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/getWebhookInfo`).then(r => r.json());
+    if (!info.ok || !info.result?.url) issues.push("webhook URL kosong");
+    else if (info.result?.last_error_message) issues.push(`webhook last_error: ${info.result.last_error_message.slice(0, 100)}`);
+  } catch (e) { issues.push(`webhook check gagal: ${e.message.slice(0, 80)}`); }
+
+  // 2. KV reachable?
+  try {
+    await env.AEGIS_KV.put(HEALTH_KEY, new Date().toISOString(), { expirationTtl: 600 });
+  } catch (e) { issues.push(`KV write gagal: ${e.message.slice(0, 80)}`); }
+
+  // 3. GitHub vault reachable?
+  try {
+    const probeRes = await fetch(
+      `https://api.github.com/repos/${env.GITHUB_OWNER}/${env.GITHUB_REPO}/contents/CLAUDE.md?ref=${env.GITHUB_BRANCH || "main"}`,
+      { headers: { Authorization: `Bearer ${env.GITHUB_TOKEN}`, "User-Agent": "AegisBot" } }
+    );
+    if (!probeRes.ok) issues.push(`GitHub probe ${probeRes.status}`);
+  } catch (e) { issues.push(`GitHub probe gagal: ${e.message.slice(0, 80)}`); }
+
+  if (issues.length === 0) return;
+
+  // Anti-spam: max 1 alert/jam
+  const lastAlert = await env.AEGIS_KV.get(HEALTH_ALERT_KEY);
+  if (lastAlert) return;
+  await env.AEGIS_KV.put(HEALTH_ALERT_KEY, "1", { expirationTtl: 3600 });
+
+  await sendMessage(env, env.TELEGRAM_CHAT_ID,
+    `⚠️ Aegis health alert (auto-detect):\n${issues.map(i => `• ${i}`).join("\n")}\n\n(Saya coba auto-recover. Notif berikutnya max 1 jam lagi.)`
+  ).catch(() => {});
 };
 
 const runDailyJobs = async (env) => {
@@ -451,6 +493,25 @@ const runDailyJobs = async (env) => {
     await syncKnowledge(env).catch(e => console.error("knowledge sync:", e.message));
     await markFired(env, `distill-${n.date}`);
   }
+  // 22:00 WIB - Daily Health Digest (Aegis lapor sehat-tidak-nya tiap malam)
+  if (hh === "22" && mm === "00" && !(await wasFired(env, `health-${n.date}`))) {
+    try {
+      const { listFolder } = await import("./lib/store.js");
+      const inbox = await listFolder(env, "00-INBOX").catch(() => []);
+      const inboxCount = inbox.filter(f => f.name?.endsWith(".md")).length;
+      const lastHealth = await env.AEGIS_KV.get(HEALTH_KEY);
+      const remRes = await fetch(
+        `https://api.github.com/repos/${env.GITHUB_OWNER}/${env.GITHUB_REPO}/contents/07-SYSTEM/reminders.json?ref=${env.GITHUB_BRANCH || "main"}`,
+        { headers: { Authorization: `Bearer ${env.GITHUB_TOKEN}`, "User-Agent": "AegisBot" } }
+      );
+      const remOk = remRes.ok;
+      const status = (lastHealth && remOk) ? "✅ SEHAT" : "⚠️ ADA MASALAH";
+      await sendMessage(env, env.TELEGRAM_CHAT_ID,
+        `🩺 Aegis Health Digest ${n.date}\nStatus: ${status}\n📥 Inbox: ${inboxCount} file\n💾 KV last write: ${lastHealth || "(belum)"}\n📚 Vault GitHub: ${remOk ? "OK" : "ERROR"}`);
+    } catch (err) { console.error("health-digest:", err.message); }
+    await markFired(env, `health-${n.date}`);
+  }
+
   // Sunday 19:00 WIB - Weekly reflect
   const dow = new Date(n.isoOffset).getUTCDay() === 0 ? 0 : new Date(n.isoOffset).getDay(); // 0 = Sunday
   if (dow === 0 && hh === "19" && mm === "00" && !(await wasFired(env, `reflect-${n.date}`))) {
@@ -533,6 +594,7 @@ export default {
     ctx.waitUntil((async () => {
       try {
         await cronWebhookHealth(env);
+        await cronHealthMonitor(env);
         await cronReminderDispatch(env);
         await cronAutoDistillIfFull(env);
         await runDailyJobs(env);
