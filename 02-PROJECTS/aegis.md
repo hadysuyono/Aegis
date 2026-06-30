@@ -61,12 +61,11 @@ Vault sync      : Obsidian Git plugin (auto-pull 5m, push 10m)
 
 ## 📋 Next Action
 
-- [ ] Pindah chat brain Telegram dari Z.AI → Cloudflare Workers AI (privacy + free)
-- [ ] Wire `audit.js` → `ai.js`
-- [ ] Apply `redactMemory` di briefings/recap/anomaly/reflect
-- [ ] Hapus dead code compound di `ai.js`
-- [ ] `/audit` command Telegram
-- [ ] Test end-to-end tools (`search_memory`, `brainstorm`, `calculate`, `web_search`)
+- [ ] **Stress test brain rebuild** — Bapak coba 3 pertanyaan list/cross-reference
+- [ ] Wire `audit.js` → `ai.js` (low priority)
+- [ ] Apply `redactMemory` di briefings/recap/anomaly/reflect (privacy ditunda)
+- [ ] `/audit` command Telegram (low priority)
+- [ ] Test end-to-end tools (`brainstorm`, `calculate`, `web_search`)
 
 ## 🟡 Open Loops
 
@@ -76,8 +75,11 @@ Vault sync      : Obsidian Git plugin (auto-pull 5m, push 10m)
 
 ## 📜 Recent Decisions
 
-- 2026-06-29: Pindah chat brain → Cloudflare Workers AI (privacy + free, no training). Belum eksekusi.
-- 2026-06-29: AI router swap — Z.AI Flash primary, Groq jadi fallback (hindari 413 char limit)
+- **2026-06-30: DATA-FIRST GROUNDING** — bikin `lib/grounding.js` middleware. AI WAJIB pakai konteks vault (owner/people/projects/decisions/events/beliefs/reminders + 02-PROJECTS), JANGAN ngarang. AI = narator data, bukan otak pemutus.
+- **2026-06-30: AI PROVIDER ROUTE** — Groq llama-3.3-70b PRIMARY (1-2s konsisten), Z.AI demote ke backup (sering abort 15s+). CF Workers AI Llama BUKAN utk decision-making (ngarang/skip tool).
+- **2026-06-30: Privacy migration DITUNDA** — Hady prefer Aegis FREE selamanya, privacy = future task. Data sensitif boleh ke AI free untuk sekarang.
+- **2026-06-30: Debug endpoint `/debug-grounding?q=...`** — buka di browser utk verifikasi raw grounding yang di-inject ke AI (bukti vault read).
+- 2026-06-29: AI router swap Z.AI Flash primary (kemudian direvisi 30/6 ke Groq)
 - 2026-06-29: Vault sync FIX via Obsidian Git plugin v2.38.5 + reset hard ke origin/main
 - 2026-06-29: STATE.md + HISTORY.md pattern untuk hemat token tiap new chat
 - 2026-06-04: Hardening security ditunda — pertahankan login custom

@@ -4,6 +4,61 @@
 
 ---
 
+## 2026-06-30 — Aegis Brain Rebuild (DATA-FIRST + Groq primary)
+
+**Konteks awal:**
+- Bot Aegis sering jawab "Maaf Pak, saya tidak paham" / "saya bingung"
+- Bot ngarang "belum ada jadwal tercatat" padahal reminder ada di vault
+- Hady frustrasi: "saya cape, Aegis goblok banget"
+
+**Diagnosis berturut-turut:**
+1. Awal: AI router refactor v1 (CF Workers AI primary chat) → GAGAL: Llama 3.3 70B di CF ngarang/skip tool, tidak patuh JSON-strict
+2. Revert ke Z.AI primary + tambah Groq backup
+3. Bug 'Compound limit habis': dead code di `notifyQuotaExhausted` ai.js → dihapus
+4. OLD bot Node.js (Railway Aegis project belum benar2 ke-delete) ngerampas Telegram polling → setelah Hady klik Deploy di Railway, OLD bot mati
+5. Webhook self-heal aktif (cronWebhookHealth dipanggil di scheduled handler)
+6. Webhook secret_token disertakan saat setWebhook
+7. AbortController timeout per fetch (cegah waitUntil 30s overflow)
+
+**Diskusi arsitektur (BESAR):**
+Hady tegaskan visi: "AI WAJIB tarik data Obsidian DULU sebelum jawab. AI bukan otak yang putuskan, AI cuma narator dari data."
+→ Bangun `lib/grounding.js` middleware: sebelum AI dipanggil, sistem auto-fetch SEMUA memory vault (owner, people, projects, decisions, events, beliefs, reminders, 02-PROJECTS pages) dan inject ke system prompt.
+
+**Achieved:**
+- New: `bot-worker/src/lib/grounding.js` v2 — ALWAYS-LOAD CORE memory
+- brain.js: panggil buildGrounding sebelum AI + prioritas KONTEKS_VAULT > tool call
+- ai.js: senior + reason chain pindah ke **Groq llama-3.3-70b PRIMARY** (1-2s response, vs Z.AI yg sering abort 15s+)
+- KV rate-limit blacklist 60s skip provider yg baru 429
+- Endpoint debug: `/debug-grounding?q=<query>` — BUKTI Aegis baca vault (return raw grounding output)
+- Endpoint: `/setup-webhook` — force re-set Telegram webhook
+- wrangler.toml: observability persist (logs ON, traces invalid di wrangler v3 → dihapus)
+- OpenRouter API key di-set ulang di Cloudflare secret
+- Fetch timeout 8s → 15s (Z.AI butuh waktu utk grounding besar)
+- MAX_TURN 5 → 3 (cegah waitUntil overflow)
+- brain.js graceful reply parsing: terima reply/answer/message/text/content
+
+**Bukti data flow (via /debug-grounding?q=siapa+karyawan):**
+- ✅ Worker reads from GitHub HadyAshlan/Aegis@main
+- ✅ owner.json loaded (Hady, M44/M53/bajaj/Aegis)
+- ✅ reminders.json loaded (30 Juni 07:00 Keselamatan berkendara)
+- ✅ people.json loaded (Arip hutang 3.450.000, Bembeng 1.000.000, Isa 500.000)
+- ✅ projects.json loaded
+- Grounding total: 12,791 chars (~3,198 tokens)
+
+**Decisions:**
+- ARSITEKTUR: DATA-FIRST grounding — AI WAJIB pakai konteks vault, JANGAN ngarang
+- AI provider: Groq PRIMARY (cepat & reliable utk JSON), Z.AI backup
+- CF Workers AI Llama 3.3 70B BUKAN utk decision-making (ngarang/skip tool) — cuma utk fast role
+- Privacy migration ditunda (Hady prefer Aegis FREE selamanya, privacy = future task)
+- Push protocol: WAJIB announce akun + folder dulu
+
+**Pending (next session):**
+- Hady stress test 3 pertanyaan list/cross-reference ("daftar karyawan", "projek apa aktif", "siapa hutang sama saya")
+- Capital Sentinel memory architecture (tunggu winrate 60% + profit ≥ $20/bln)
+- TODO STATE.md: audit.js + privacy.redact di cron (low priority)
+
+---
+
 ## 2026-06-29 (malam) — Setup Second Brain Obsidian
 
 **Achieved:**
