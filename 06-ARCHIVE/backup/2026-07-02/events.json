@@ -1,0 +1,16 @@
+{
+  "schema": "event",
+  "version": 1,
+  "events": [
+    {
+      "id": "ev_7b7d68",
+      "datetime_iso": "2026-06-22T09:00:00+07:00",
+      "event": "Rapat anggota tahunan kojang",
+      "involves": [],
+      "project": "kojang",
+      "status": "scheduled",
+      "source_file": "2026-06-21-052218.md",
+      "recorded": "2026-06-21"
+    }
+  ]
+}
