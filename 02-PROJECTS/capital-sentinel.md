@@ -18,7 +18,7 @@ Bot trading kripto yang kasih sinyal entry/exit + analisa multi-AI consensus. Tu
 - **Deploy:** Railway (✅ BOLEH bayar — beda dari Aegis)
 - **Email infra:** `hadysuyono87@gmail.com`
 - **Local:** `C:\Users\HP\Workspace\Reguler_Fleet` (sharing folder)
-- **Versi LIVE:** v10.32 (Layer 2 Advisor)
+- **Versi LIVE:** v10.33 (FIX swing + Layer 2 report jalan)
 
 **Konvensi versi (Hady 1 Jul 2026):** Setiap update CS harus bump version di `config.py` (`VERSION = "vX.YY - <deskripsi singkat>"`). Versi tampil di startup log + boot message. Skip = boleh untuk fix typo tanpa logic change.
 - **Rules detail:** `08-PROJECT-FEEDS/capital-sentinel/STATE.md` + `HISTORY.md`
@@ -69,6 +69,7 @@ Bot trading kripto yang kasih sinyal entry/exit + analisa multi-AI consensus. Tu
 
 ## 📜 Recent Decisions
 
+- **2026-07-02: v10.33 FIX** — 2 bug ketemu via Railway logs: (1) swing trader SEJAK v10.30 gak pernah jalan (indodax return dict candle {ts,o,h,l,c,v} tapi swing_trader baca index c[3]/c[2] → KeyError silent tiap cycle). (2) Layer 2 gagal tiap cycle (confidence/score kadang string 'MEDIUM' → sorted() crash str<int). Fix: swing pakai helper _hi/_lo dukung dict+list; Layer 2 pakai _nums() numeric-guard. Tested BUY 70%/SELL 64% + Layer 2 render OK. Logika rumus TIDAK diubah.
 - **2026-07-01: LAYER 2 LIVE** — Historical Memory Agent + Vault Reader terhubung. Commit `affe594` di `hadysuyono/Capital_Sentinel`. Kill switch ENABLE_HISTORICAL_AGENT=true aktif. Layer 1 (rumus + ensemble) UTUH, 0% diganggu. Layer 2 = pesan Telegram TERPISAH per cycle.
 - **2026-06-30: ARSITEKTUR 3-LAYER** — Hady tegaskan: Layer 1 rumus utuh, Layer 2 modular (riset historical), Layer 3 Claude head advisor (pending top up Anthropic $5).
 - **2026-06-30: HEAD ADVISOR FLOW** — Saya (Claude) jadi otak akhir. Anak buah AI (News, Macro, Scout, Memory, Layer 2) lapor ke saya → approve/reject → brief ke continuity_writer untuk narrative.
