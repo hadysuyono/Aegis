@@ -18,7 +18,7 @@ Bot trading kripto yang kasih sinyal entry/exit + analisa multi-AI consensus. Tu
 - **Deploy:** Railway (✅ BOLEH bayar — beda dari Aegis)
 - **Email infra:** `hadysuyono87@gmail.com`
 - **Local:** `C:\Users\HP\Workspace\Reguler_Fleet` (sharing folder)
-- **Versi LIVE:** v10.33 (FIX swing + Layer 2 report jalan)
+- **Versi LIVE:** v10.36 (feedback loop AKTIF + Rapor Bot)
 
 **Konvensi versi (Hady 1 Jul 2026):** Setiap update CS harus bump version di `config.py` (`VERSION = "vX.YY - <deskripsi singkat>"`). Versi tampil di startup log + boot message. Skip = boleh untuk fix typo tanpa logic change.
 - **Rules detail:** `08-PROJECT-FEEDS/capital-sentinel/STATE.md` + `HISTORY.md`
@@ -69,6 +69,8 @@ Bot trading kripto yang kasih sinyal entry/exit + analisa multi-AI consensus. Tu
 
 ## 📜 Recent Decisions
 
+- **2026-07-02: v10.34-36** — (34) narrator baca AIResponse.text; (35) whale radar FIX: api.binance.com geo-blocked → data-api.binance.vision (mirror resmi); (36) **FEEDBACK LOOP AKTIF**: audit calibration.json Railway → 190 verdict outcome=null (evaluate_outcomes ada sejak v10.17 tapi zero caller, bot gak pernah belajar). Wired ke scheduler tiap cycle + STALE guard + section 'Rapor Bot' di Advisor (win-rate per sinyal → Hady tahu kapan masuk/TP).
+- **2026-07-02: KALIBRASI TERBUKTI** — rekonstruksi manual 13 hari data: STRONG SELL 26 Jun @ 1.133jt → crash -7.3% (TEPAT). STRONG CL ETH selama drop -10% (TEPAT). Kesimpulan: sinyal STRONG layak diikuti. Hady entry 1.117 saat bot CONFLICT (di luar sinyal); advice: HOLD, TP 1.131, bail < 1.047, avg down zona 1.072-1.081.
 - **2026-07-02: v10.33 FIX** — 2 bug ketemu via Railway logs: (1) swing trader SEJAK v10.30 gak pernah jalan (indodax return dict candle {ts,o,h,l,c,v} tapi swing_trader baca index c[3]/c[2] → KeyError silent tiap cycle). (2) Layer 2 gagal tiap cycle (confidence/score kadang string 'MEDIUM' → sorted() crash str<int). Fix: swing pakai helper _hi/_lo dukung dict+list; Layer 2 pakai _nums() numeric-guard. Tested BUY 70%/SELL 64% + Layer 2 render OK. Logika rumus TIDAK diubah.
 - **2026-07-01: LAYER 2 LIVE** — Historical Memory Agent + Vault Reader terhubung. Commit `affe594` di `hadysuyono/Capital_Sentinel`. Kill switch ENABLE_HISTORICAL_AGENT=true aktif. Layer 1 (rumus + ensemble) UTUH, 0% diganggu. Layer 2 = pesan Telegram TERPISAH per cycle.
 - **2026-06-30: ARSITEKTUR 3-LAYER** — Hady tegaskan: Layer 1 rumus utuh, Layer 2 modular (riset historical), Layer 3 Claude head advisor (pending top up Anthropic $5).
